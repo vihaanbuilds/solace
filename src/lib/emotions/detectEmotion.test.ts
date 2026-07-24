@@ -51,4 +51,14 @@ describe('detectEmotion', () => {
     const withComma = detectEmotion('I feel really, sad today');
     expect(withComma.scores[0].score).toBeGreaterThan(plain.scores[0].score);
   });
+
+  it('suppresses an emotion word negated by a contraction', () => {
+    const result = detectEmotion("I don't feel happy about this at all");
+    expect(result.topEmotion).not.toBe('happiness');
+  });
+
+  it('suppresses an emotion word negated by "can\'t" contraction', () => {
+    const result = detectEmotion("I can't feel excited about anything lately");
+    expect(result.topEmotion).not.toBe('happiness');
+  });
 });

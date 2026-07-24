@@ -25,7 +25,8 @@ export default function App() {
             person or a mental health professional.
           </p>
           <p>
-            Pick a mode below to shape how Solace responds: <strong>Comforter</strong>{' '}
+            Once you're in, you can pick a mode to shape how Solace responds:{' '}
+            <strong>Comforter</strong>{' '}
             validates and soothes, <strong>Uplifter</strong> gently encourages, and{' '}
             <strong>Reflector</strong> helps you think things through.
           </p>

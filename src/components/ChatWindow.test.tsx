@@ -41,6 +41,16 @@ describe('ChatWindow', () => {
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
+  it('shows the crisis banner even when the message also contains strong emotion words', async () => {
+    const user = userEvent.setup();
+    render(<ChatWindow />);
+    const input = screen.getByLabelText('Message input');
+    await user.type(input, 'I am so sad and hopeless I want to die');
+    await user.click(screen.getByText('Send'));
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+  });
+
   it('persists messages across a remount', async () => {
     const user = userEvent.setup();
     const { unmount } = render(<ChatWindow />);

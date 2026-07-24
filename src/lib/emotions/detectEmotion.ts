@@ -1,4 +1,5 @@
 import { EMOTION_LEXICON, Emotion, NEGATION_WORDS, INTENSIFIERS, DAMPENERS } from './lexicon';
+import { escapeRegExp } from './regexUtil';
 
 export interface EmotionScore {
   emotion: Emotion;
@@ -13,18 +14,26 @@ export interface DetectionResult {
 
 const AMBIGUITY_THRESHOLD = 0.75;
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 function stripPunctuation(word: string): string {
   return word.replace(/^[^\w']+|[^\w']+$/g, '');
+}
+
+// Expands contractions like "don't" / "can't" to "do not" / "can not" so the
+// negation-word lookup (which matches on the literal token "not") catches
+// contracted negations too. This is only ever applied to the slice of text
+// BEFORE a matched phrase (see wordsBefore below) — never to the phrase-matching
+// text itself — so multi-word lexicon phrases that themselves contain "n't"
+// (e.g. "can't stand", "can't handle", "can't stop thinking", "shouldn't have")
+// are matched against the untouched original text and are unaffected.
+function expandContractionsForNegation(text: string): string {
+  return text.replace(/\b(\w+)n't\b/g, '$1 not');
 }
 
 function wordsBefore(normalized: string, index: number): string[] {
   const before = normalized.slice(0, index).trim();
   if (!before) return [];
-  return before.split(/\s+/).map(stripPunctuation).filter(Boolean);
+  const expanded = expandContractionsForNegation(before);
+  return expanded.split(/\s+/).map(stripPunctuation).filter(Boolean);
 }
 
 export function detectEmotion(text: string): DetectionResult {

@@ -14,6 +14,10 @@ describe('isCrisis', () => {
     expect(isCrisis('I keep having thoughts about suicide')).toBe(true);
   });
 
+  it('flags "suicidal" as well as "suicide"', () => {
+    expect(isCrisis("I've been feeling suicidal lately")).toBe(true);
+  });
+
   it('does not flag ordinary text', () => {
     expect(isCrisis('I love pizza and I had a good day')).toBe(false);
   });

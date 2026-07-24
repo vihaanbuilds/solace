@@ -103,7 +103,7 @@ export const EMOTION_LEXICON: Record<Emotion, LexiconEntry[]> = {
   ],
 };
 
-export const NEGATION_WORDS = ['not', "n't", 'no', 'never', 'without', 'hardly'];
+export const NEGATION_WORDS = ['not', 'no', 'never', 'without', 'hardly'];
 
 export const INTENSIFIERS: Record<string, number> = {
   really: 1.5,

@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 
+// Node's experimental built-in localStorage global shadows jsdom's working one in this Vitest version, so we provide a spec-faithful in-memory replacement.
 class MemoryStorage implements Storage {
   private store = new Map<string, string>();
 

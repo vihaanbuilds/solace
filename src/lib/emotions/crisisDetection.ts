@@ -1,6 +1,4 @@
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+import { escapeRegExp } from './regexUtil';
 
 const CRISIS_PHRASES = [
   'want to die',
@@ -11,6 +9,7 @@ const CRISIS_PHRASES = [
   'no reason to live',
   'better off dead',
   'suicide',
+  'suicidal',
   'hurting myself',
   'hurt myself',
   'harm myself',
