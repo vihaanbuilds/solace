@@ -33,3 +33,9 @@ Object.defineProperty(globalThis, 'localStorage', {
   configurable: true,
   writable: true,
 });
+
+// jsdom does not implement scrollIntoView; polyfill as a no-op so components
+// that call it (e.g. auto-scroll on new messages) don't throw in tests.
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function scrollIntoView() {};
+}

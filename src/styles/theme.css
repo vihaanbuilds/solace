@@ -191,3 +191,79 @@ body {
 .crisis-banner p {
   margin: 0.25rem 0;
 }
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+}
+
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.chat-input-row button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--color-baby-blue), var(--color-blush-pink));
+}
+
+.start-fresh-btn {
+  background: transparent !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-soft);
+}
+
+.onboarding-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-card {
+  max-width: 480px;
+  padding: 2rem;
+  border-radius: 1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.onboarding-card button {
+  margin-top: 1rem;
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.5rem;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--color-baby-blue), var(--color-blush-pink));
+}
