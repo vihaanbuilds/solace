@@ -11,13 +11,14 @@ describe('ChatWindow', () => {
 
   it('sends a message and renders both the user message and a bot reply', async () => {
     const user = userEvent.setup();
-    render(<ChatWindow />);
+    const { container } = render(<ChatWindow />);
     const input = screen.getByLabelText('Message input');
     await user.type(input, 'I feel really sad today');
     await user.click(screen.getByText('Send'));
 
     expect(screen.getByText('I feel really sad today')).toBeInTheDocument();
     expect(loadMessages()).toHaveLength(2);
+    expect(container.querySelectorAll('.message-bubble-bot')).toHaveLength(1);
   });
 
   it('switches mode via the mode selector', async () => {
