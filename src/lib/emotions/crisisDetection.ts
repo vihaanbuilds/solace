@@ -1,3 +1,7 @@
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 const CRISIS_PHRASES = [
   'want to die',
   'kill myself',
@@ -14,7 +18,11 @@ const CRISIS_PHRASES = [
   'self-harm',
 ];
 
+const CRISIS_PATTERNS = CRISIS_PHRASES.map(
+  (phrase) => new RegExp(`\\b${escapeRegExp(phrase)}\\b`)
+);
+
 export function isCrisis(text: string): boolean {
   const normalized = text.toLowerCase().replace(/[‘’]/g, "'");
-  return CRISIS_PHRASES.some((phrase) => normalized.includes(phrase));
+  return CRISIS_PATTERNS.some((pattern) => pattern.test(normalized));
 }

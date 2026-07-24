@@ -30,6 +30,10 @@ describe('isCrisis', () => {
     expect(isCrisis('I don’t want to be here anymore')).toBe(true);
   });
 
+  it('does not flag "self harm" when it spans an unrelated word boundary', () => {
+    expect(isCrisis('I would never want to see myself harmed by anyone')).toBe(false);
+  });
+
   it('does not flag unrelated words that happen to contain a lexicon fragment', () => {
     expect(isCrisis('The party had wonderful harmony and the music died down slowly')).toBe(false);
   });
