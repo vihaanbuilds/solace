@@ -41,3 +41,43 @@ body {
   font-size: 1.1rem;
   cursor: pointer;
 }
+
+.ambient-background {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.blob {
+  position: absolute;
+  width: 40vw;
+  height: 40vw;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.18;
+  animation: drift 40s ease-in-out infinite;
+}
+
+.blob-blue {
+  background: var(--color-baby-blue);
+  top: -10%;
+  left: -10%;
+}
+
+.blob-pink {
+  background: var(--color-blush-pink);
+  bottom: -15%;
+  right: -10%;
+  animation-delay: -20s;
+}
+
+@keyframes drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(6vw, 8vh) scale(1.15);
+  }
+}
