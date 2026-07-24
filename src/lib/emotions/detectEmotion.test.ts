@@ -34,4 +34,21 @@ describe('detectEmotion', () => {
     expect(result.topEmotion).toBeNull();
     expect(result.scores).toHaveLength(0);
   });
+
+  it('does not match a lexicon phrase inside an unrelated word', () => {
+    const result = detectEmotion('I need to download this file before the meeting');
+    expect(result.topEmotion).toBeNull();
+  });
+
+  it('scores repeated emotion phrases higher than a single occurrence', () => {
+    const once = detectEmotion('I am sad about this');
+    const repeated = detectEmotion('I am sad, so sad, endlessly sad about this');
+    expect(repeated.scores[0].score).toBeGreaterThan(once.scores[0].score);
+  });
+
+  it('applies an intensifier even when it is followed by a comma', () => {
+    const plain = detectEmotion('I feel sad today');
+    const withComma = detectEmotion('I feel really, sad today');
+    expect(withComma.scores[0].score).toBeGreaterThan(plain.scores[0].score);
+  });
 });

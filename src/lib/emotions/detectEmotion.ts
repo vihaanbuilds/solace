@@ -13,10 +13,18 @@ export interface DetectionResult {
 
 const AMBIGUITY_THRESHOLD = 0.75;
 
-function wordsBefore(normalized: string, index: number, maxChars = 25): string[] {
-  const start = Math.max(0, index - maxChars);
-  const before = normalized.slice(start, index).trim();
-  return before.length ? before.split(/\s+/) : [];
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function stripPunctuation(word: string): string {
+  return word.replace(/^[^\w']+|[^\w']+$/g, '');
+}
+
+function wordsBefore(normalized: string, index: number): string[] {
+  const before = normalized.slice(0, index).trim();
+  if (!before) return [];
+  return before.split(/\s+/).map(stripPunctuation).filter(Boolean);
 }
 
 export function detectEmotion(text: string): DetectionResult {
@@ -28,24 +36,27 @@ export function detectEmotion(text: string): DetectionResult {
 
   for (const emotion of emotions) {
     for (const entry of EMOTION_LEXICON[emotion]) {
-      const idx = normalized.indexOf(entry.phrase);
-      if (idx === -1) continue;
+      const pattern = new RegExp(`\\b${escapeRegExp(entry.phrase)}\\b`, 'g');
+      let match: RegExpExecArray | null;
+      while ((match = pattern.exec(normalized)) !== null) {
+        let weight = entry.weight;
+        const before = wordsBefore(normalized, match.index);
+        const lastWord = before[before.length - 1];
+        const lastTwo = before.slice(-2).join(' ');
+        const lastThree = before.slice(-3);
 
-      let weight = entry.weight;
-      const before = wordsBefore(normalized, idx);
-      const lastWord = before[before.length - 1];
-      const lastTwo = before.slice(-2).join(' ');
-      const lastThree = before.slice(-3);
+        const negated = lastThree.some((w) => NEGATION_WORDS.includes(w));
+        if (negated) weight *= -1;
 
-      const negated = lastThree.some((w) => NEGATION_WORDS.includes(w));
-      if (negated) weight *= -1;
+        const intensifier = INTENSIFIERS[lastWord] ?? INTENSIFIERS[lastTwo];
+        const dampener = DAMPENERS[lastWord] ?? DAMPENERS[lastTwo];
+        if (intensifier) weight *= intensifier;
+        else if (dampener) weight *= dampener;
 
-      const intensifier = INTENSIFIERS[lastWord] ?? INTENSIFIERS[lastTwo];
-      const dampener = DAMPENERS[lastWord] ?? DAMPENERS[lastTwo];
-      if (intensifier) weight *= intensifier;
-      else if (dampener) weight *= dampener;
+        scores[emotion] += weight;
 
-      scores[emotion] += weight;
+        if (match.index === pattern.lastIndex) pattern.lastIndex += 1;
+      }
     }
   }
 
