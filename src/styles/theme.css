@@ -103,3 +103,79 @@ body {
   color: var(--color-text);
   font-weight: 600;
 }
+
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.message-row {
+  position: relative;
+  display: flex;
+}
+
+.message-row-bot {
+  justify-content: flex-start;
+}
+
+.message-row-user {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  position: relative;
+  max-width: 70%;
+  padding: 0.75rem 1rem;
+  border-radius: 1rem;
+  line-height: 1.4;
+}
+
+.message-bubble-bot {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.message-bubble-user {
+  background: linear-gradient(135deg, var(--color-baby-blue), var(--color-blush-pink));
+  color: #2e2a38;
+}
+
+.rainbow-glow {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  right: 30%;
+  bottom: -8px;
+  border-radius: 1.5rem;
+  filter: blur(20px);
+  opacity: 0.5;
+  z-index: -1;
+  background: linear-gradient(
+    270deg,
+    #ffb3ba,
+    #ffdfba,
+    #ffffba,
+    #baffc9,
+    #bae1ff,
+    #d5baff
+  );
+  background-size: 400% 400%;
+  animation: hue-drift 10s ease-in-out infinite;
+}
+
+@keyframes hue-drift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
