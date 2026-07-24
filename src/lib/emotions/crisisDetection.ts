@@ -8,12 +8,13 @@ const CRISIS_PHRASES = [
   'better off dead',
   'suicide',
   'hurting myself',
+  'hurt myself',
   'harm myself',
   'self harm',
   'self-harm',
 ];
 
 export function isCrisis(text: string): boolean {
-  const normalized = text.toLowerCase();
+  const normalized = text.toLowerCase().replace(/[‘’]/g, "'");
   return CRISIS_PHRASES.some((phrase) => normalized.includes(phrase));
 }

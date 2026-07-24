@@ -21,4 +21,16 @@ describe('isCrisis', () => {
   it('does not flag ordinary sadness without crisis language', () => {
     expect(isCrisis('I feel really sad and empty today')).toBe(false);
   });
+
+  it('flags "hurt myself" as well as "hurting myself"', () => {
+    expect(isCrisis('I want to hurt myself')).toBe(true);
+  });
+
+  it('flags crisis phrasing even with a curly apostrophe from mobile autocorrect', () => {
+    expect(isCrisis('I don’t want to be here anymore')).toBe(true);
+  });
+
+  it('does not flag unrelated words that happen to contain a lexicon fragment', () => {
+    expect(isCrisis('The party had wonderful harmony and the music died down slowly')).toBe(false);
+  });
 });
