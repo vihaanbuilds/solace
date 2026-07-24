@@ -13,8 +13,8 @@ function pickRandom(options: string[]): string {
 }
 
 export function getResponse(message: string, mode: Mode): BotReply {
-  const detection = detectEmotion(message);
   const crisis = isCrisis(message);
+  const detection = detectEmotion(message);
 
   if (crisis) {
     return { text: pickRandom(CRISIS_RESPONSES[mode]), isCrisis: true, detection };
