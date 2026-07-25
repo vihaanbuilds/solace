@@ -24,4 +24,11 @@ describe('isOffTopicQuestion', () => {
   it('does not flag empty input', () => {
     expect(isOffTopicQuestion('   ')).toBe(false);
   });
+
+  it('recognizes homework and calculation requests', () => {
+    expect(isOffTopicQuestion('can you solve this equation for me')).toBe(true);
+    expect(isOffTopicQuestion('help me with my homework')).toBe(true);
+    expect(isOffTopicQuestion('write an essay about the french revolution')).toBe(true);
+    expect(isOffTopicQuestion('what is the square root of 144')).toBe(true);
+  });
 });

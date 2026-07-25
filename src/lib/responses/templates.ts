@@ -294,18 +294,33 @@ export const GREETING_RESPONSES: Record<Mode, string[]> = {
 
 export const OFF_TOPIC_RESPONSES: Record<Mode, string[]> = {
   comforter: [
-    "I'm honestly built to focus on how you're feeling rather than answer things like that — but I'm here if something's on your mind.",
-    "That's outside what I'm able to help with — I'm really just here for how you're doing emotionally. Is everything okay?",
-    "I can't really answer that one, but I'm here if there's something going on for you.",
+    "I'm only made to provide emotional support, not to answer questions or do calculations or homework — but I'm here if something's on your mind.",
+    "I can't help with that — I'm only built for emotional support, not facts or schoolwork. Is everything okay?",
+    "That's outside what I do. I'm only here to support you emotionally, not answer or solve things like that.",
   ],
   uplifter: [
-    "That's not really my thing to answer — I'm here for the feelings side of things. What's actually going on with you today?",
-    "I'll be honest, that's outside my lane — but if something's been on your mind, I'd love to hear it.",
-    "Can't help with that one, but I'm all ears if there's something you want to talk through.",
+    "I'm only made to provide emotional support, not to answer questions or do calculations or homework — but if something's been on your mind, I'd love to hear it.",
+    "I can't help with that one — I'm only built for emotional support, not facts or schoolwork. What's actually going on with you today?",
+    "That's not something I do. I'm only here for the feelings side of things, not answers or homework.",
   ],
   reflector: [
-    "That's not something I can help with — I'm built around understanding what you're feeling. What's actually on your mind?",
-    "I don't have a way to answer that, but I'm curious what brought you here today.",
-    "That falls outside what I do, but if there's something underneath the question, I'd like to hear it.",
+    "I'm only made to provide emotional support, not to answer questions or do calculations or homework — what's actually on your mind?",
+    "I can't help with that — I'm only built for emotional support, not facts or schoolwork. What brought you here today?",
+    "That falls outside what I do. I'm only here to help you think through what you're feeling, not solve or answer things like that.",
+  ],
+};
+
+export const IDENTITY_RESPONSES: Record<Mode, string[]> = {
+  comforter: [
+    "I'm Solace — I'm here to listen and support you emotionally, not to answer questions about myself. How are you doing?",
+    "I'm just a supportive companion, here to listen. What's going on with you?",
+  ],
+  uplifter: [
+    "I'm Solace — built to be here for you emotionally, not much else. What's on your mind today?",
+    "I'm just here to support you, not to talk about myself. What's going on with you?",
+  ],
+  reflector: [
+    "I'm Solace — a companion built to help you process how you're feeling, not to answer things about myself. What's on your mind?",
+    "I'm just here to listen and help you think things through. What brought you here today?",
   ],
 };

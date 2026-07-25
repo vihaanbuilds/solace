@@ -16,9 +16,23 @@ const FACTUAL_QUESTION_STEMS = [
   /^what('|)s the capital\b/i,
 ];
 
+const HOMEWORK_PATTERNS = [
+  /\bsolve\b/i,
+  /\bhomework\b/i,
+  /\bequation\b/i,
+  /\balgebra\b/i,
+  /\bmath problem\b/i,
+  /\bmy essay\b/i,
+  /\bwrite (an|a|my) (essay|paragraph|story|poem|paper)\b/i,
+  /\bhow do (i|you) (solve|calculate)\b/i,
+  /\bwhat('|)s the (sum|product|answer|square root)\b/i,
+  /\bcan you (solve|calculate|do my)\b/i,
+];
+
 export function isOffTopicQuestion(text: string): boolean {
   const trimmed = text.trim();
   if (!trimmed) return false;
   if (MATH_EXPRESSION.test(trimmed)) return true;
+  if (HOMEWORK_PATTERNS.some((pattern) => pattern.test(trimmed))) return true;
   return FACTUAL_QUESTION_STEMS.some((pattern) => pattern.test(trimmed));
 }

@@ -1,12 +1,14 @@
 import { detectEmotion, DetectionResult } from '../emotions/detectEmotion';
 import { isCrisis } from '../emotions/crisisDetection';
 import { isGreeting } from '../emotions/greeting';
+import { isIdentityQuestion } from '../emotions/identity';
 import { isOffTopicQuestion } from '../emotions/offTopic';
 import {
   RESPONSE_TEMPLATES,
   CLARIFYING_QUESTIONS,
   CRISIS_RESPONSES,
   GREETING_RESPONSES,
+  IDENTITY_RESPONSES,
   OFF_TOPIC_RESPONSES,
   Mode,
 } from './templates';
@@ -32,6 +34,9 @@ export function getResponse(message: string, mode: Mode): BotReply {
   if (!detection.topEmotion) {
     if (isGreeting(message)) {
       return { text: pickRandom(GREETING_RESPONSES[mode]), isCrisis: false, detection };
+    }
+    if (isIdentityQuestion(message)) {
+      return { text: pickRandom(IDENTITY_RESPONSES[mode]), isCrisis: false, detection };
     }
     if (isOffTopicQuestion(message)) {
       return { text: pickRandom(OFF_TOPIC_RESPONSES[mode]), isCrisis: false, detection };

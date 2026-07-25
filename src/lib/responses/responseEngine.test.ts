@@ -5,6 +5,7 @@ import {
   CLARIFYING_QUESTIONS,
   CRISIS_RESPONSES,
   GREETING_RESPONSES,
+  IDENTITY_RESPONSES,
   OFF_TOPIC_RESPONSES,
 } from './templates';
 
@@ -43,5 +44,17 @@ describe('getResponse', () => {
     const reply = getResponse('what is 1+1', 'reflector');
     expect(reply.isCrisis).toBe(false);
     expect(OFF_TOPIC_RESPONSES.reflector).toContain(reply.text);
+  });
+
+  it('returns an off-topic response for a homework request', () => {
+    const reply = getResponse('can you solve this equation for me', 'uplifter');
+    expect(reply.isCrisis).toBe(false);
+    expect(OFF_TOPIC_RESPONSES.uplifter).toContain(reply.text);
+  });
+
+  it('returns an identity response for questions about what the bot is', () => {
+    const reply = getResponse('what are you', 'comforter');
+    expect(reply.isCrisis).toBe(false);
+    expect(IDENTITY_RESPONSES.comforter).toContain(reply.text);
   });
 });
