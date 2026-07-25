@@ -166,6 +166,33 @@ describe('App', () => {
     });
   });
 
+  describe('sidebar collapse', () => {
+    it('hides the sidebar contents when the toggle is clicked, and shows them again on a second click', async () => {
+      const user = userEvent.setup();
+      await completeOnboarding(user);
+
+      expect(screen.getByText('+ New chat')).toBeInTheDocument();
+
+      await user.click(screen.getByLabelText('Hide chat history'));
+      expect(screen.queryByText('+ New chat')).not.toBeInTheDocument();
+
+      await user.click(screen.getByLabelText('Show chat history'));
+      expect(screen.getByText('+ New chat')).toBeInTheDocument();
+    });
+
+    it('persists the collapsed preference across a remount', async () => {
+      const user = userEvent.setup();
+      const { unmount } = render(<App />);
+      await user.click(screen.getByText("I'm ready"));
+      await user.click(screen.getByLabelText('Hide chat history'));
+      unmount();
+
+      render(<App />);
+      await user.click(screen.getByText("I'm ready"));
+      expect(screen.queryByText('+ New chat')).not.toBeInTheDocument();
+    });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });

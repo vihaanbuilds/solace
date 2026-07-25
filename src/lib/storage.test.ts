@@ -8,6 +8,8 @@ import {
   loadMode,
   saveTheme,
   loadTheme,
+  saveSidebarCollapsed,
+  loadSidebarCollapsed,
   deriveTitle,
   createId,
   Conversation,
@@ -66,6 +68,14 @@ describe('storage', () => {
   it('round-trips the selected theme', () => {
     saveTheme('dark');
     expect(loadTheme()).toBe('dark');
+  });
+
+  it('round-trips the sidebar collapsed preference', () => {
+    expect(loadSidebarCollapsed()).toBe(false);
+    saveSidebarCollapsed(true);
+    expect(loadSidebarCollapsed()).toBe(true);
+    saveSidebarCollapsed(false);
+    expect(loadSidebarCollapsed()).toBe(false);
   });
 
   it('derives a conversation title from the first user message', () => {

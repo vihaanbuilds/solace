@@ -19,6 +19,7 @@ const ACTIVE_CONVERSATION_KEY = 'solace.activeConversationId';
 const LEGACY_MESSAGES_KEY = 'solace.messages';
 const MODE_KEY = 'solace.mode';
 const THEME_KEY = 'solace.theme';
+const SIDEBAR_COLLAPSED_KEY = 'solace.sidebarCollapsed';
 
 export function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -93,4 +94,12 @@ export function saveTheme(theme: string): void {
 
 export function loadTheme(): string | null {
   return localStorage.getItem(THEME_KEY);
+}
+
+export function saveSidebarCollapsed(collapsed: boolean): void {
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
+}
+
+export function loadSidebarCollapsed(): boolean {
+  return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
 }

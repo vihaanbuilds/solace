@@ -14,6 +14,8 @@ import {
   loadActiveConversationId,
   saveActiveConversationId,
   loadTheme,
+  loadSidebarCollapsed,
+  saveSidebarCollapsed,
 } from './lib/storage';
 import { WELCOME_MESSAGES } from './lib/content/welcomeMessages';
 import './styles/theme.css';
@@ -31,9 +33,14 @@ export default function App() {
   const [onboarded, setOnboarded] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => loadSidebarCollapsed());
   const [welcomeMessage] = useState(
     () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
   );
+
+  useEffect(() => {
+    saveSidebarCollapsed(sidebarCollapsed);
+  }, [sidebarCollapsed]);
 
   useEffect(() => {
     const theme = loadTheme();
@@ -156,10 +163,20 @@ export default function App() {
         onNewChat={handleNewChat}
         onRename={handleRenameConversation}
         onDelete={handleDeleteConversation}
+        collapsed={sidebarCollapsed}
       />
       <div className="main-column">
         <header className="app-header">
-          <h1 className="brand-title">Solace</h1>
+          <div className="app-header-controls">
+            <button
+              className="sidebar-toggle-btn glass"
+              onClick={() => setSidebarCollapsed((prev) => !prev)}
+              aria-label={sidebarCollapsed ? 'Show chat history' : 'Hide chat history'}
+            >
+              ☰
+            </button>
+            <h1 className="brand-title">Solace</h1>
+          </div>
           <div className="app-header-controls">
             <AiStatusIndicator />
             <ThemeToggle />

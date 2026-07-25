@@ -18,6 +18,7 @@ function renderSidebar(overrides: Partial<React.ComponentProps<typeof Sidebar>> 
       onNewChat={() => {}}
       onRename={() => {}}
       onDelete={() => {}}
+      collapsed={false}
       {...overrides}
     />
   );
@@ -136,6 +137,28 @@ describe('Sidebar', () => {
       await user.click(screen.getByLabelText('Delete First chat'));
 
       expect(onDelete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('collapsed', () => {
+    it('hides the conversation list and new-chat button when collapsed', () => {
+      renderSidebar({ collapsed: true });
+      expect(screen.queryByText('+ New chat')).not.toBeInTheDocument();
+      expect(screen.queryByText('First chat')).not.toBeInTheDocument();
+    });
+
+    it('marks the nav as aria-hidden when collapsed', () => {
+      renderSidebar({ collapsed: true });
+      expect(screen.getByLabelText('Conversation history')).toHaveAttribute(
+        'aria-hidden',
+        'true'
+      );
+    });
+
+    it('shows the conversation list again when not collapsed', () => {
+      renderSidebar({ collapsed: false });
+      expect(screen.getByText('+ New chat')).toBeInTheDocument();
+      expect(screen.getByText('First chat')).toBeInTheDocument();
     });
   });
 });
