@@ -27,4 +27,16 @@ describe('MessageBubble', () => {
     expect(screen.getByText('I feel sad')).toBeInTheDocument();
     expect(container.querySelector('.rainbow-glow')).toBeNull();
   });
+
+  it('shows a thinking placeholder for a pending empty bot message', () => {
+    const message: StoredMessage = { id: 'pending', sender: 'bot', text: '', timestamp: 1 };
+    render(<MessageBubble message={message} pending />);
+    expect(screen.getByText('Solace is thinking…')).toBeInTheDocument();
+  });
+
+  it('shows streamed partial text for a pending bot message once tokens arrive', () => {
+    const message: StoredMessage = { id: 'pending', sender: 'bot', text: 'Partial reply', timestamp: 1 };
+    render(<MessageBubble message={message} pending />);
+    expect(screen.getByText('Partial reply')).toBeInTheDocument();
+  });
 });

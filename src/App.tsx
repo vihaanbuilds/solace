@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ChatWindow } from './components/ChatWindow';
 import { ThemeToggle } from './components/ThemeToggle';
 import { AmbientBackground } from './components/AmbientBackground';
+import { AiStatusIndicator } from './components/AiStatusIndicator';
 import { Sidebar } from './components/Sidebar';
 import {
   Conversation,
@@ -84,11 +85,38 @@ export default function App() {
         ? {
             ...c,
             messages,
-            title: c.title === 'New conversation' ? deriveTitle(messages) : c.title,
+            title: c.titleIsCustom ? c.title : deriveTitle(messages),
           }
         : c
     );
     persist(next);
+  }
+
+  function handleRenameConversation(id: string, title: string) {
+    const next = conversations.map((c) =>
+      c.id === id ? { ...c, title, titleIsCustom: true } : c
+    );
+    persist(next);
+  }
+
+  function handleDeleteConversation(id: string) {
+    const remaining = conversations.filter((c) => c.id !== id);
+
+    if (remaining.length === 0) {
+      const fresh = createConversation();
+      persist([fresh]);
+      setActiveConversationId(fresh.id);
+      saveActiveConversationId(fresh.id);
+      return;
+    }
+
+    persist(remaining);
+
+    if (id === activeConversationId) {
+      const nextActiveId = remaining[0].id;
+      setActiveConversationId(nextActiveId);
+      saveActiveConversationId(nextActiveId);
+    }
   }
 
   if (!onboarded) {
@@ -96,6 +124,9 @@ export default function App() {
       <div className="onboarding-screen">
         <AmbientBackground />
         <div className="onboarding-card glass-strong">
+          <div className="onboarding-icon" aria-hidden="true">
+            🌿
+          </div>
           <h1 className="brand-title">Welcome to Solace</h1>
           <p className="welcome-hero">{welcomeMessage}</p>
           <p>
@@ -123,11 +154,16 @@ export default function App() {
         activeConversationId={activeConversationId}
         onSelect={handleSelectConversation}
         onNewChat={handleNewChat}
+        onRename={handleRenameConversation}
+        onDelete={handleDeleteConversation}
       />
       <div className="main-column">
         <header className="app-header">
           <h1 className="brand-title">Solace</h1>
-          <ThemeToggle />
+          <div className="app-header-controls">
+            <AiStatusIndicator />
+            <ThemeToggle />
+          </div>
         </header>
         {activeConversation && (
           <ChatWindow

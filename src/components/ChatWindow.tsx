@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { ModeSelector } from './ModeSelector';
 import { CrisisBanner } from './CrisisBanner';
-import { getResponse } from '../lib/responses/responseEngine';
+import { getResponse, ConversationTurn } from '../lib/responses/responseEngine';
 import { Mode } from '../lib/responses/templates';
 import { StoredMessage, createId, loadMode, saveMode } from '../lib/storage';
 
@@ -14,6 +14,7 @@ interface ChatWindowProps {
 export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
   const [mode, setMode] = useState<Mode>(() => (loadMode() as Mode) || 'comforter');
   const [input, setInput] = useState('');
+  const [pendingBotText, setPendingBotText] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,14 +23,15 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, pendingBotText]);
 
   const lastBotMessage = [...messages].reverse().find((m) => m.sender === 'bot');
   const showCrisisBanner = lastBotMessage?.isCrisis === true;
 
-  function handleSend() {
+  async function handleSend() {
     const text = input.trim();
-    if (!text) return;
+    if (!text || pendingBotText !== null) return;
+    setInput('');
 
     const userMessage: StoredMessage = {
       id: createId(),
@@ -37,8 +39,19 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
       text,
       timestamp: Date.now(),
     };
+    const messagesWithUser = [...messages, userMessage];
+    onMessagesChange(messagesWithUser);
 
-    const reply = getResponse(text, mode);
+    const history: ConversationTurn[] = messages.map((m) => ({
+      role: m.sender === 'user' ? ('user' as const) : ('assistant' as const),
+      content: m.text,
+    }));
+
+    setPendingBotText('');
+
+    const reply = await getResponse(text, mode, history, (partial) => {
+      setPendingBotText(partial);
+    });
 
     const botMessage: StoredMessage = {
       id: createId(),
@@ -48,8 +61,8 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
       timestamp: Date.now(),
     };
 
-    onMessagesChange([...messages, userMessage, botMessage]);
-    setInput('');
+    setPendingBotText(null);
+    onMessagesChange([...messagesWithUser, botMessage]);
   }
 
   function handleStartFresh() {
@@ -66,6 +79,12 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} />
         ))}
+        {pendingBotText !== null && (
+          <MessageBubble
+            message={{ id: 'pending', sender: 'bot', text: pendingBotText, timestamp: Date.now() }}
+            pending
+          />
+        )}
         <div ref={endRef} />
       </div>
       <div className="chat-input-row glass">
@@ -75,8 +94,11 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           placeholder="Type how you're feeling..."
           aria-label="Message input"
+          disabled={pendingBotText !== null}
         />
-        <button onClick={handleSend}>Send</button>
+        <button onClick={handleSend} disabled={pendingBotText !== null}>
+          Send
+        </button>
         <button onClick={handleStartFresh} className="start-fresh-btn">
           Start fresh
         </button>

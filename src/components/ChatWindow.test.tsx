@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { useState } from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChatWindow } from './ChatWindow';
 import { StoredMessage } from '../lib/storage';
@@ -36,10 +36,12 @@ describe('ChatWindow', () => {
     await user.click(screen.getByText('Send'));
 
     expect(screen.getByText('I feel really sad today')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(container.querySelectorAll('.message-bubble-bot')).toHaveLength(1);
+    });
     expect(onMessagesChange).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ text: 'I feel really sad today' })])
     );
-    expect(container.querySelectorAll('.message-bubble-bot')).toHaveLength(1);
   });
 
   it('switches mode via the mode selector', async () => {
@@ -59,7 +61,7 @@ describe('ChatWindow', () => {
     await user.type(input, 'I want to die');
     await user.click(screen.getByText('Send'));
 
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
   });
 
   it('shows the crisis banner even when the message also contains strong emotion words', async () => {
@@ -69,7 +71,7 @@ describe('ChatWindow', () => {
     await user.type(input, 'I am so sad and hopeless I want to die');
     await user.click(screen.getByText('Send'));
 
-    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toBeInTheDocument();
   });
 
   it('derives crisis banner visibility from the most recent bot message, not separate state', () => {
@@ -94,7 +96,9 @@ describe('ChatWindow', () => {
     await user.type(input, 'hi');
     await user.click(screen.getByText('Send'));
 
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
   });
 
   it('renders existing messages passed in as props', () => {
@@ -103,5 +107,29 @@ describe('ChatWindow', () => {
     ];
     render(<ControlledChatWindow initialMessages={messages} />);
     expect(screen.getByText('I feel happy today')).toBeInTheDocument();
+  });
+
+  it('shows a pending thinking bubble while a reply is being generated, then removes it', async () => {
+    const user = userEvent.setup();
+    render(<ControlledChatWindow />);
+    const input = screen.getByLabelText('Message input');
+    await user.type(input, 'hi');
+    await user.click(screen.getByText('Send'));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Solace is thinking…')).not.toBeInTheDocument();
+    });
+  });
+
+  it('disables input while a reply is pending', async () => {
+    const user = userEvent.setup();
+    render(<ControlledChatWindow />);
+    const input = screen.getByLabelText('Message input') as HTMLInputElement;
+    await user.type(input, 'hi');
+    await user.click(screen.getByText('Send'));
+
+    await waitFor(() => {
+      expect(input).not.toBeDisabled();
+    });
   });
 });

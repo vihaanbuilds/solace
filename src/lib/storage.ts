@@ -11,6 +11,7 @@ export interface Conversation {
   title: string;
   createdAt: number;
   messages: StoredMessage[];
+  titleIsCustom?: boolean;
 }
 
 const CONVERSATIONS_KEY = 'solace.conversations';
