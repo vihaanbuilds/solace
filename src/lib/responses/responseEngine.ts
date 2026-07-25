@@ -1,6 +1,13 @@
 import { detectEmotion, DetectionResult } from '../emotions/detectEmotion';
 import { isCrisis } from '../emotions/crisisDetection';
-import { RESPONSE_TEMPLATES, CLARIFYING_QUESTIONS, CRISIS_RESPONSES, Mode } from './templates';
+import { isGreeting } from '../emotions/greeting';
+import {
+  RESPONSE_TEMPLATES,
+  CLARIFYING_QUESTIONS,
+  CRISIS_RESPONSES,
+  GREETING_RESPONSES,
+  Mode,
+} from './templates';
 
 export interface BotReply {
   text: string;
@@ -21,6 +28,9 @@ export function getResponse(message: string, mode: Mode): BotReply {
   }
 
   if (!detection.topEmotion) {
+    if (isGreeting(message)) {
+      return { text: pickRandom(GREETING_RESPONSES[mode]), isCrisis: false, detection };
+    }
     return { text: pickRandom(CLARIFYING_QUESTIONS), isCrisis: false, detection };
   }
 

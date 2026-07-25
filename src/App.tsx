@@ -1,24 +1,103 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChatWindow } from './components/ChatWindow';
 import { ThemeToggle } from './components/ThemeToggle';
 import { AmbientBackground } from './components/AmbientBackground';
-import { loadTheme } from './lib/storage';
+import { Sidebar } from './components/Sidebar';
+import {
+  Conversation,
+  StoredMessage,
+  createId,
+  deriveTitle,
+  loadConversations,
+  saveConversations,
+  loadActiveConversationId,
+  saveActiveConversationId,
+  loadTheme,
+} from './lib/storage';
+import { WELCOME_MESSAGES } from './lib/content/welcomeMessages';
 import './styles/theme.css';
+
+function createConversation(): Conversation {
+  return {
+    id: createId(),
+    title: 'New conversation',
+    createdAt: Date.now(),
+    messages: [],
+  };
+}
 
 export default function App() {
   const [onboarded, setOnboarded] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [welcomeMessage] = useState(
+    () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
+  );
 
   useEffect(() => {
     const theme = loadTheme();
     if (theme) document.documentElement.setAttribute('data-theme', theme);
+
+    const loaded = loadConversations();
+
+    if (loaded.length === 0) {
+      const fresh = createConversation();
+      setConversations([fresh]);
+      setActiveConversationId(fresh.id);
+      saveConversations([fresh]);
+      saveActiveConversationId(fresh.id);
+      return;
+    }
+
+    setConversations(loaded);
+    const storedActiveId = loadActiveConversationId();
+    const activeExists = storedActiveId && loaded.some((c) => c.id === storedActiveId);
+    setActiveConversationId(activeExists ? (storedActiveId as string) : loaded[0].id);
   }, []);
+
+  const activeConversation = useMemo(
+    () => conversations.find((c) => c.id === activeConversationId) ?? null,
+    [conversations, activeConversationId]
+  );
+
+  function persist(next: Conversation[]) {
+    setConversations(next);
+    saveConversations(next);
+  }
+
+  function handleNewChat() {
+    const fresh = createConversation();
+    persist([fresh, ...conversations]);
+    setActiveConversationId(fresh.id);
+    saveActiveConversationId(fresh.id);
+  }
+
+  function handleSelectConversation(id: string) {
+    setActiveConversationId(id);
+    saveActiveConversationId(id);
+  }
+
+  function handleMessagesChange(messages: StoredMessage[]) {
+    if (!activeConversationId) return;
+    const next = conversations.map((c) =>
+      c.id === activeConversationId
+        ? {
+            ...c,
+            messages,
+            title: c.title === 'New conversation' ? deriveTitle(messages) : c.title,
+          }
+        : c
+    );
+    persist(next);
+  }
 
   if (!onboarded) {
     return (
       <div className="onboarding-screen">
         <AmbientBackground />
-        <div className="onboarding-card">
-          <h1>Welcome to Solace</h1>
+        <div className="onboarding-card glass-strong">
+          <h1 className="brand-title">Welcome to Solace</h1>
+          <p className="welcome-hero">{welcomeMessage}</p>
           <p>
             Solace is a supportive companion that listens and responds to how you're
             feeling. It's here to help you feel heard — it isn't a substitute for a real
@@ -37,13 +116,26 @@ export default function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-layout">
       <AmbientBackground />
-      <header className="app-header">
-        <h1>Solace</h1>
-        <ThemeToggle />
-      </header>
-      <ChatWindow />
+      <Sidebar
+        conversations={conversations}
+        activeConversationId={activeConversationId}
+        onSelect={handleSelectConversation}
+        onNewChat={handleNewChat}
+      />
+      <div className="main-column">
+        <header className="app-header">
+          <h1 className="brand-title">Solace</h1>
+          <ThemeToggle />
+        </header>
+        {activeConversation && (
+          <ChatWindow
+            messages={activeConversation.messages}
+            onMessagesChange={handleMessagesChange}
+          />
+        )}
+      </div>
     </div>
   );
 }

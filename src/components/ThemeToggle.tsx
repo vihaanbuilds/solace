@@ -15,7 +15,7 @@ export function ThemeToggle() {
     <button
       onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
       aria-label="Toggle theme"
-      className="theme-toggle"
+      className="theme-toggle glass"
     >
       {theme === 'light' ? '🌙' : '☀️'}
     </button>

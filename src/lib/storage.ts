@@ -6,26 +6,76 @@ export interface StoredMessage {
   timestamp: number;
 }
 
-const MESSAGES_KEY = 'solace.messages';
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: number;
+  messages: StoredMessage[];
+}
+
+const CONVERSATIONS_KEY = 'solace.conversations';
+const ACTIVE_CONVERSATION_KEY = 'solace.activeConversationId';
+const LEGACY_MESSAGES_KEY = 'solace.messages';
 const MODE_KEY = 'solace.mode';
 const THEME_KEY = 'solace.theme';
 
-export function saveMessages(messages: StoredMessage[]): void {
-  localStorage.setItem(MESSAGES_KEY, JSON.stringify(messages));
+export function createId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function loadMessages(): StoredMessage[] {
-  const raw = localStorage.getItem(MESSAGES_KEY);
-  if (!raw) return [];
+export function deriveTitle(messages: StoredMessage[]): string {
+  const firstUserMessage = messages.find((m) => m.sender === 'user');
+  if (!firstUserMessage) return 'New conversation';
+  const trimmed = firstUserMessage.text.trim();
+  if (!trimmed) return 'New conversation';
+  return trimmed.length > 40 ? `${trimmed.slice(0, 40)}…` : trimmed;
+}
+
+function migrateLegacyMessages(): Conversation[] {
+  const legacyRaw = localStorage.getItem(LEGACY_MESSAGES_KEY);
+  if (!legacyRaw) return [];
+
   try {
-    return JSON.parse(raw) as StoredMessage[];
+    const legacyMessages = JSON.parse(legacyRaw) as StoredMessage[];
+    if (!Array.isArray(legacyMessages) || legacyMessages.length === 0) return [];
+
+    const migrated: Conversation[] = [
+      {
+        id: createId(),
+        title: deriveTitle(legacyMessages),
+        createdAt: legacyMessages[0].timestamp,
+        messages: legacyMessages,
+      },
+    ];
+    saveConversations(migrated);
+    localStorage.removeItem(LEGACY_MESSAGES_KEY);
+    return migrated;
   } catch {
     return [];
   }
 }
 
-export function clearMessages(): void {
-  localStorage.removeItem(MESSAGES_KEY);
+export function saveConversations(conversations: Conversation[]): void {
+  localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(conversations));
+}
+
+export function loadConversations(): Conversation[] {
+  const raw = localStorage.getItem(CONVERSATIONS_KEY);
+  if (!raw) return migrateLegacyMessages();
+
+  try {
+    return JSON.parse(raw) as Conversation[];
+  } catch {
+    return [];
+  }
+}
+
+export function saveActiveConversationId(id: string): void {
+  localStorage.setItem(ACTIVE_CONVERSATION_KEY, id);
+}
+
+export function loadActiveConversationId(): string | null {
+  return localStorage.getItem(ACTIVE_CONVERSATION_KEY);
 }
 
 export function saveMode(mode: string): void {

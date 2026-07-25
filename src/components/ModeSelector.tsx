@@ -19,7 +19,7 @@ export function ModeSelector({ mode, onChange }: ModeSelectorProps) {
           key={m}
           role="tab"
           aria-selected={mode === m}
-          className={`mode-pill ${mode === m ? 'mode-pill-active' : ''}`}
+          className={`mode-pill glass ${mode === m ? 'mode-pill-active' : ''}`}
           onClick={() => onChange(m)}
         >
           {MODE_LABELS[m]}

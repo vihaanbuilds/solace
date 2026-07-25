@@ -5,7 +5,9 @@ export function MessageBubble({ message }: { message: StoredMessage }) {
   return (
     <div className={`message-row ${isBot ? 'message-row-bot' : 'message-row-user'}`}>
       {isBot && <div className="rainbow-glow" aria-hidden="true" />}
-      <div className={`message-bubble ${isBot ? 'message-bubble-bot' : 'message-bubble-user'}`}>
+      <div
+        className={`message-bubble ${isBot ? 'message-bubble-bot glass-strong' : 'message-bubble-user'}`}
+      >
         {message.text}
       </div>
     </div>

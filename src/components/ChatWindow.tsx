@@ -4,29 +4,17 @@ import { ModeSelector } from './ModeSelector';
 import { CrisisBanner } from './CrisisBanner';
 import { getResponse } from '../lib/responses/responseEngine';
 import { Mode } from '../lib/responses/templates';
-import {
-  StoredMessage,
-  loadMessages,
-  saveMessages,
-  clearMessages,
-  loadMode,
-  saveMode,
-} from '../lib/storage';
+import { StoredMessage, createId, loadMode, saveMode } from '../lib/storage';
 
-function makeId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+interface ChatWindowProps {
+  messages: StoredMessage[];
+  onMessagesChange: (messages: StoredMessage[]) => void;
 }
 
-export function ChatWindow() {
-  const [messages, setMessages] = useState<StoredMessage[]>(() => loadMessages());
+export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
   const [mode, setMode] = useState<Mode>(() => (loadMode() as Mode) || 'comforter');
   const [input, setInput] = useState('');
-  const [showCrisisBanner, setShowCrisisBanner] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    saveMessages(messages);
-  }, [messages]);
 
   useEffect(() => {
     saveMode(mode);
@@ -36,12 +24,15 @@ export function ChatWindow() {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const lastBotMessage = [...messages].reverse().find((m) => m.sender === 'bot');
+  const showCrisisBanner = lastBotMessage?.isCrisis === true;
+
   function handleSend() {
     const text = input.trim();
     if (!text) return;
 
     const userMessage: StoredMessage = {
-      id: makeId(),
+      id: createId(),
       sender: 'user',
       text,
       timestamp: Date.now(),
@@ -50,23 +41,20 @@ export function ChatWindow() {
     const reply = getResponse(text, mode);
 
     const botMessage: StoredMessage = {
-      id: makeId(),
+      id: createId(),
       sender: 'bot',
       text: reply.text,
       isCrisis: reply.isCrisis,
       timestamp: Date.now(),
     };
 
-    setMessages((prev) => [...prev, userMessage, botMessage]);
-    setShowCrisisBanner(reply.isCrisis);
+    onMessagesChange([...messages, userMessage, botMessage]);
     setInput('');
   }
 
   function handleStartFresh() {
     if (window.confirm('This will clear your saved conversation. Continue?')) {
-      clearMessages();
-      setMessages([]);
-      setShowCrisisBanner(false);
+      onMessagesChange([]);
     }
   }
 
@@ -80,7 +68,7 @@ export function ChatWindow() {
         ))}
         <div ref={endRef} />
       </div>
-      <div className="chat-input-row">
+      <div className="chat-input-row glass">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
