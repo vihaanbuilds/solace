@@ -296,6 +296,15 @@ body {
   margin: 0.25rem 0;
 }
 
+.ai-loading-banner {
+  margin: 0 1rem 0.75rem;
+  padding: 0.7rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--color-text-soft);
+  line-height: 1.4;
+}
+
 .app-layout {
   display: flex;
   min-height: 100vh;

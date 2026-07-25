@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { ModeSelector } from './ModeSelector';
 import { CrisisBanner } from './CrisisBanner';
+import { AiLoadingBanner } from './AiLoadingBanner';
 import { getResponse, ConversationTurn } from '../lib/responses/responseEngine';
 import { Mode } from '../lib/responses/templates';
 import { StoredMessage, createId, loadMode, saveMode } from '../lib/storage';
@@ -74,6 +75,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
   return (
     <div className="chat-window">
       <ModeSelector mode={mode} onChange={setMode} />
+      <AiLoadingBanner />
       {showCrisisBanner && <CrisisBanner />}
       <div className="message-list">
         {messages.map((m) => (
