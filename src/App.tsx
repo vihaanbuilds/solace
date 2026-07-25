@@ -172,8 +172,9 @@ export default function App() {
               className="sidebar-toggle-btn glass"
               onClick={() => setSidebarCollapsed((prev) => !prev)}
               aria-label={sidebarCollapsed ? 'Show chat history' : 'Hide chat history'}
+              title={sidebarCollapsed ? 'Show chat history' : 'Hide chat history'}
             >
-              ☰
+              {sidebarCollapsed ? '☰' : '⟨'}
             </button>
             <h1 className="brand-title">Solace</h1>
           </div>

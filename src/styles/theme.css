@@ -337,18 +337,21 @@ body {
 }
 
 .sidebar-toggle-btn {
-  border: none;
+  border: 1px solid var(--glass-border) !important;
   border-radius: 0.75rem;
   width: 2.5rem;
   height: 2.5rem;
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text-soft);
   cursor: pointer;
   flex-shrink: 0;
-  transition: transform 0.15s ease;
+  transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .sidebar-toggle-btn:hover {
   transform: translateY(-1px);
+  color: var(--color-text);
 }
 
 .sidebar-new-chat {
