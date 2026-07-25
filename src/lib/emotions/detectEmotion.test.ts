@@ -61,4 +61,9 @@ describe('detectEmotion', () => {
     const result = detectEmotion("I can't feel excited about anything lately");
     expect(result.topEmotion).not.toBe('happiness');
   });
+
+  it('detects jealousy from comparison language without the word "jealous"', () => {
+    const result = detectEmotion('im not feeling well... my friends are so much better than me');
+    expect(result.topEmotion).toBe('jealousy');
+  });
 });
