@@ -291,3 +291,21 @@ export const GREETING_RESPONSES: Record<Mode, string[]> = {
     "Hello — what's going on for you today?",
   ],
 };
+
+export const OFF_TOPIC_RESPONSES: Record<Mode, string[]> = {
+  comforter: [
+    "I'm honestly built to focus on how you're feeling rather than answer things like that — but I'm here if something's on your mind.",
+    "That's outside what I'm able to help with — I'm really just here for how you're doing emotionally. Is everything okay?",
+    "I can't really answer that one, but I'm here if there's something going on for you.",
+  ],
+  uplifter: [
+    "That's not really my thing to answer — I'm here for the feelings side of things. What's actually going on with you today?",
+    "I'll be honest, that's outside my lane — but if something's been on your mind, I'd love to hear it.",
+    "Can't help with that one, but I'm all ears if there's something you want to talk through.",
+  ],
+  reflector: [
+    "That's not something I can help with — I'm built around understanding what you're feeling. What's actually on your mind?",
+    "I don't have a way to answer that, but I'm curious what brought you here today.",
+    "That falls outside what I do, but if there's something underneath the question, I'd like to hear it.",
+  ],
+};

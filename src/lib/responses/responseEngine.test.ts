@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { getResponse } from './responseEngine';
-import { RESPONSE_TEMPLATES, CLARIFYING_QUESTIONS, CRISIS_RESPONSES } from './templates';
+import {
+  RESPONSE_TEMPLATES,
+  CLARIFYING_QUESTIONS,
+  CRISIS_RESPONSES,
+  GREETING_RESPONSES,
+  OFF_TOPIC_RESPONSES,
+} from './templates';
 
 describe('getResponse', () => {
   it('returns a grief comforter template for grief-indicating text', () => {
@@ -25,5 +31,17 @@ describe('getResponse', () => {
     const reply = getResponse('I am so sad I want to die', 'uplifter');
     expect(reply.isCrisis).toBe(true);
     expect(CRISIS_RESPONSES.uplifter).toContain(reply.text);
+  });
+
+  it('returns a greeting response for a plain greeting instead of a clarifying question', () => {
+    const reply = getResponse('hi', 'comforter');
+    expect(reply.isCrisis).toBe(false);
+    expect(GREETING_RESPONSES.comforter).toContain(reply.text);
+  });
+
+  it('returns an off-topic response for a factual question instead of a clarifying question', () => {
+    const reply = getResponse('what is 1+1', 'reflector');
+    expect(reply.isCrisis).toBe(false);
+    expect(OFF_TOPIC_RESPONSES.reflector).toContain(reply.text);
   });
 });
