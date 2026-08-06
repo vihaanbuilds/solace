@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Conversation } from '../lib/storage';
 
 interface SidebarProps {
@@ -9,6 +10,15 @@ interface SidebarProps {
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
   collapsed: boolean;
+}
+
+const MENU_WIDTH = 168;
+
+function buildTranscript(conversation: Conversation): string {
+  const lines = conversation.messages.map(
+    (m) => `${m.sender === 'user' ? 'Me' : 'Solace'}: ${m.text}`
+  );
+  return [`Solace conversation — ${conversation.title}`, '', ...lines].join('\n');
 }
 
 export function Sidebar({
@@ -22,10 +32,57 @@ export function Sidebar({
 }: SidebarProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState('');
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const kebabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const menuNodeRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const sorted = [...conversations].sort((a, b) => b.createdAt - a.createdAt);
 
+  useEffect(() => {
+    if (!openMenuId) return;
+
+    function isInsideMenu(target: EventTarget | null) {
+      if (!(target instanceof Node)) return false;
+      if (menuNodeRef.current?.contains(target)) return true;
+      const kebab = openMenuId ? kebabRefs.current[openMenuId] : null;
+      return kebab ? kebab.contains(target) : false;
+    }
+
+    function handlePointerDown(e: MouseEvent) {
+      if (!isInsideMenu(e.target)) setOpenMenuId(null);
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpenMenuId(null);
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [openMenuId]);
+
+  function toggleMenu(conversation: Conversation) {
+    if (openMenuId === conversation.id) {
+      setOpenMenuId(null);
+      return;
+    }
+    const btn = kebabRefs.current[conversation.id];
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      setMenuPosition({
+        top: rect.bottom + 6,
+        left: Math.max(8, rect.right - MENU_WIDTH),
+      });
+    }
+    setOpenMenuId(conversation.id);
+  }
+
   function startRename(conversation: Conversation) {
+    setOpenMenuId(null);
     setRenamingId(conversation.id);
     setDraftTitle(conversation.title);
   }
@@ -39,6 +96,7 @@ export function Sidebar({
   }
 
   function handleDelete(conversation: Conversation) {
+    setOpenMenuId(null);
     const confirmed = window.confirm(
       `Delete "${conversation.title}" permanently? There is no way to recover this conversation once it's deleted.`
     );
@@ -46,6 +104,37 @@ export function Sidebar({
       onDelete(conversation.id);
     }
   }
+
+  async function handleShare(conversation: Conversation) {
+    setOpenMenuId(null);
+    const transcript = buildTranscript(conversation);
+    const shareData = { title: `Solace — ${conversation.title}`, text: transcript };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        if ((err as Error)?.name !== 'AbortError') {
+          console.error('Share failed', err);
+        }
+      }
+      return;
+    }
+
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(transcript);
+        window.alert("Sharing isn't supported in this browser — copied the conversation to your clipboard instead.");
+        return;
+      } catch {
+        // fall through to the final alert below
+      }
+    }
+
+    window.alert("Sharing isn't supported in this browser.");
+  }
+
+  const menuConversation = openMenuId ? sorted.find((c) => c.id === openMenuId) : undefined;
 
   return (
     <nav
@@ -59,7 +148,11 @@ export function Sidebar({
             + New chat
           </button>
           {sorted.length > 0 && <div className="sidebar-label">Chats</div>}
-          <div className="sidebar-list">
+          <div
+            className="sidebar-list"
+            ref={listRef}
+            onScroll={() => setOpenMenuId(null)}
+          >
             {sorted.map((conversation) => (
               <div key={conversation.id} className="sidebar-row">
                 {renamingId === conversation.id ? (
@@ -86,20 +179,20 @@ export function Sidebar({
                     {conversation.title}
                   </button>
                 )}
-                <div className="sidebar-row-actions">
+                <div
+                  className={`sidebar-row-actions ${
+                    openMenuId === conversation.id ? 'sidebar-row-actions-open' : ''
+                  }`}
+                >
                   <button
-                    className="sidebar-icon-btn"
-                    aria-label={`Rename ${conversation.title}`}
-                    onClick={() => startRename(conversation)}
+                    ref={(el) => (kebabRefs.current[conversation.id] = el)}
+                    className="sidebar-menu-btn"
+                    aria-label={`Options for ${conversation.title}`}
+                    aria-haspopup="menu"
+                    aria-expanded={openMenuId === conversation.id}
+                    onClick={() => toggleMenu(conversation)}
                   >
-                    ✏️
-                  </button>
-                  <button
-                    className="sidebar-icon-btn"
-                    aria-label={`Delete ${conversation.title}`}
-                    onClick={() => handleDelete(conversation)}
-                  >
-                    🗑️
+                    ⋮
                   </button>
                 </div>
               </div>
@@ -107,6 +200,41 @@ export function Sidebar({
           </div>
         </>
       )}
+      {openMenuId &&
+        menuConversation &&
+        menuPosition &&
+        createPortal(
+          <div
+            ref={menuNodeRef}
+            className="sidebar-row-menu glass"
+            role="menu"
+            aria-label={`${menuConversation.title} actions`}
+            style={{ top: menuPosition.top, left: menuPosition.left, width: MENU_WIDTH }}
+          >
+            <button
+              role="menuitem"
+              className="sidebar-row-menu-item"
+              onClick={() => startRename(menuConversation)}
+            >
+              ✏️ Rename
+            </button>
+            <button
+              role="menuitem"
+              className="sidebar-row-menu-item"
+              onClick={() => handleShare(menuConversation)}
+            >
+              📤 Share
+            </button>
+            <button
+              role="menuitem"
+              className="sidebar-row-menu-item sidebar-row-menu-item-danger"
+              onClick={() => handleDelete(menuConversation)}
+            >
+              🗑️ Delete
+            </button>
+          </div>,
+          document.body
+        )}
     </nav>
   );
 }

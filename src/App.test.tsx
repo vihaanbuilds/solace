@@ -99,7 +99,8 @@ describe('App', () => {
       const user = userEvent.setup();
       await completeOnboarding(user);
 
-      await user.click(within(getSidebar()).getByLabelText(/^Rename/));
+      await user.click(within(getSidebar()).getByLabelText(/^Options for/));
+      await user.click(screen.getByRole('menuitem', { name: /rename/i }));
       const renameInput = screen.getByLabelText('Rename conversation');
       await user.clear(renameInput);
       await user.type(renameInput, 'My custom title{Enter}');
@@ -123,7 +124,8 @@ describe('App', () => {
       expect(loadConversations()).toHaveLength(2);
 
       const sidebar = getSidebar();
-      await user.click(within(sidebar).getByLabelText(/^Delete.*happy today/));
+      await user.click(within(sidebar).getByLabelText(/^Options for.*happy today/));
+      await user.click(screen.getByRole('menuitem', { name: /delete/i }));
 
       expect(loadConversations()).toHaveLength(1);
       expect(
@@ -141,7 +143,8 @@ describe('App', () => {
       await sendAndAwaitReply(user, 'I feel really jealous of my friends');
 
       const sidebar = getSidebar();
-      await user.click(within(sidebar).getByLabelText(/^Delete/));
+      await user.click(within(sidebar).getByLabelText(/^Options for/));
+      await user.click(screen.getByRole('menuitem', { name: /delete/i }));
 
       expect(loadConversations()).toHaveLength(1);
       expect(loadConversations()[0].messages).toHaveLength(0);
@@ -158,7 +161,8 @@ describe('App', () => {
       await completeOnboarding(user);
 
       const sidebar = getSidebar();
-      await user.click(within(sidebar).getByLabelText(/^Delete/));
+      await user.click(within(sidebar).getByLabelText(/^Options for/));
+      await user.click(screen.getByRole('menuitem', { name: /delete/i }));
 
       expect(loadConversations()).toHaveLength(1);
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Sidebar } from './Sidebar';
 import { Conversation } from '../lib/storage';
@@ -53,11 +53,46 @@ describe('Sidebar', () => {
     expect(onNewChat).toHaveBeenCalled();
   });
 
-  describe('rename', () => {
-    it('switches to an inline input when the rename control is clicked', async () => {
+  describe('options menu', () => {
+    it('opens the menu with Rename, Share, and Delete when the options button is clicked', async () => {
       const user = userEvent.setup();
       renderSidebar();
-      await user.click(screen.getByLabelText('Rename First chat'));
+      await user.click(screen.getByLabelText('Options for First chat'));
+      const menu = screen.getByRole('menu', { name: 'First chat actions' });
+      expect(within(menu).getByRole('menuitem', { name: /rename/i })).toBeInTheDocument();
+      expect(within(menu).getByRole('menuitem', { name: /share/i })).toBeInTheDocument();
+      expect(within(menu).getByRole('menuitem', { name: /delete/i })).toBeInTheDocument();
+    });
+
+    it('closes the menu on Escape', async () => {
+      const user = userEvent.setup();
+      renderSidebar();
+      await user.click(screen.getByLabelText('Options for First chat'));
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+      await user.keyboard('{Escape}');
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+
+    it('closes the menu when clicking outside of it', async () => {
+      const user = userEvent.setup();
+      renderSidebar();
+      await user.click(screen.getByLabelText('Options for First chat'));
+      expect(screen.getByRole('menu')).toBeInTheDocument();
+      await user.click(document.body);
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('rename', () => {
+    async function openRename(user: ReturnType<typeof userEvent.setup>, label = 'First chat') {
+      await user.click(screen.getByLabelText(`Options for ${label}`));
+      await user.click(screen.getByRole('menuitem', { name: /rename/i }));
+    }
+
+    it('switches to an inline input when Rename is chosen from the menu', async () => {
+      const user = userEvent.setup();
+      renderSidebar();
+      await openRename(user);
       expect(screen.getByLabelText('Rename conversation')).toHaveValue('First chat');
     });
 
@@ -65,7 +100,7 @@ describe('Sidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       renderSidebar({ onRename });
-      await user.click(screen.getByLabelText('Rename First chat'));
+      await openRename(user);
       const input = screen.getByLabelText('Rename conversation');
       await user.clear(input);
       await user.type(input, 'My renamed chat{Enter}');
@@ -76,7 +111,7 @@ describe('Sidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       renderSidebar({ onRename });
-      await user.click(screen.getByLabelText('Rename First chat'));
+      await openRename(user);
       const input = screen.getByLabelText('Rename conversation');
       await user.clear(input);
       await user.type(input, 'Blurred title');
@@ -88,7 +123,7 @@ describe('Sidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       renderSidebar({ onRename });
-      await user.click(screen.getByLabelText('Rename First chat'));
+      await openRename(user);
       const input = screen.getByLabelText('Rename conversation');
       await user.type(input, ' more text{Escape}');
       expect(onRename).not.toHaveBeenCalled();
@@ -99,7 +134,7 @@ describe('Sidebar', () => {
       const user = userEvent.setup();
       const onRename = vi.fn();
       renderSidebar({ onRename });
-      await user.click(screen.getByLabelText('Rename First chat'));
+      await openRename(user);
       const input = screen.getByLabelText('Rename conversation');
       await user.clear(input);
       await user.keyboard('{Enter}');
@@ -116,13 +151,18 @@ describe('Sidebar', () => {
       vi.restoreAllMocks();
     });
 
+    async function openDelete(user: ReturnType<typeof userEvent.setup>, label = 'First chat') {
+      await user.click(screen.getByLabelText(`Options for ${label}`));
+      await user.click(screen.getByRole('menuitem', { name: /delete/i }));
+    }
+
     it('asks for confirmation mentioning permanence before deleting', async () => {
       const user = userEvent.setup();
       vi.mocked(window.confirm).mockReturnValue(true);
       const onDelete = vi.fn();
       renderSidebar({ onDelete });
 
-      await user.click(screen.getByLabelText('Delete First chat'));
+      await openDelete(user);
 
       expect(window.confirm).toHaveBeenCalledWith(expect.stringMatching(/no way to recover/i));
       expect(onDelete).toHaveBeenCalledWith('a');
@@ -134,9 +174,53 @@ describe('Sidebar', () => {
       const onDelete = vi.fn();
       renderSidebar({ onDelete });
 
-      await user.click(screen.getByLabelText('Delete First chat'));
+      await openDelete(user);
 
       expect(onDelete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('share', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+      // @ts-expect-error -- test-only cleanup of a browser API not present in jsdom by default
+      delete navigator.share;
+      // @ts-expect-error -- test-only cleanup of a browser API not present in jsdom by default
+      delete navigator.clipboard;
+    });
+
+    async function openShare(user: ReturnType<typeof userEvent.setup>, label = 'First chat') {
+      await user.click(screen.getByLabelText(`Options for ${label}`));
+      await user.click(screen.getByRole('menuitem', { name: /share/i }));
+    }
+
+    it('calls the native share API with the conversation title and transcript', async () => {
+      const user = userEvent.setup();
+      const share = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'share', { value: share, configurable: true });
+      renderSidebar();
+
+      await openShare(user);
+
+      expect(share).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining('First chat'),
+          text: expect.stringContaining('First chat'),
+        })
+      );
+    });
+
+    it('falls back to copying the transcript when the share API is unavailable', async () => {
+      const user = userEvent.setup();
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      renderSidebar();
+
+      await openShare(user);
+
+      expect(writeText).toHaveBeenCalledWith(expect.stringContaining('First chat'));
+      expect(window.alert).toHaveBeenCalledWith(expect.stringMatching(/copied/i));
     });
   });
 
