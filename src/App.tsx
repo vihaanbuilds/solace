@@ -34,7 +34,9 @@ export default function App() {
   const [onboarded, setOnboarded] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => loadSidebarCollapsed());
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => loadSidebarCollapsed() || window.matchMedia('(max-width: 768px)').matches
+  );
   const [welcomeMessage] = useState(
     () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
   );
@@ -74,16 +76,24 @@ export default function App() {
     saveConversations(next);
   }
 
+  function closeSidebarOnMobile() {
+    if (window.matchMedia('(max-width: 768px)').matches) {
+      setSidebarCollapsed(true);
+    }
+  }
+
   function handleNewChat() {
     const fresh = createConversation();
     persist([fresh, ...conversations]);
     setActiveConversationId(fresh.id);
     saveActiveConversationId(fresh.id);
+    closeSidebarOnMobile();
   }
 
   function handleSelectConversation(id: string) {
     setActiveConversationId(id);
     saveActiveConversationId(id);
+    closeSidebarOnMobile();
   }
 
   function handleMessagesChange(messages: StoredMessage[]) {
@@ -162,6 +172,13 @@ export default function App() {
   return (
     <div className="app-layout">
       <AmbientBackground />
+      {!sidebarCollapsed && (
+        <div
+          className="sidebar-backdrop"
+          onClick={() => setSidebarCollapsed(true)}
+          aria-hidden="true"
+        />
+      )}
       <Sidebar
         conversations={conversations}
         activeConversationId={activeConversationId}
