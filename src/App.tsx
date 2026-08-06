@@ -4,7 +4,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { AmbientBackground } from './components/AmbientBackground';
 import { AiStatusIndicator } from './components/AiStatusIndicator';
 import { Sidebar } from './components/Sidebar';
-import { CursiveReveal } from './components/CursiveReveal';
+import { CursiveReveal, CURSIVE_DRAW_SECONDS } from './components/CursiveReveal';
 import {
   Conversation,
   StoredMessage,
@@ -136,7 +136,11 @@ export default function App() {
             🌿
           </div>
           <CursiveReveal variant="solace" className="cursive-reveal-hero" />
-          <CursiveReveal variant="tagline" className="cursive-reveal-tagline" delaySeconds={1.7} />
+          <CursiveReveal
+            variant="tagline"
+            className="cursive-reveal-tagline"
+            delaySeconds={CURSIVE_DRAW_SECONDS - 0.3}
+          />
           <p className="welcome-hero">{welcomeMessage}</p>
           <p>
             Solace is a supportive companion that listens and responds to how you're

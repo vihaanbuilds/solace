@@ -1,8 +1,12 @@
 import { useLayoutEffect, useRef } from 'react';
 import { CURSIVE_PATHS } from '../lib/cursivePaths.generated';
 
-const DRAW_MS = 1800;
-const FILL_MS = 700;
+const DRAW_MS = 3200;
+const FILL_MS = 900;
+
+// Exposed so callers can time a follow-up element (e.g. a subheading) to
+// start just before this word finishes drawing.
+export const CURSIVE_DRAW_SECONDS = DRAW_MS / 1000;
 
 interface CursiveRevealProps {
   variant: 'solace' | 'tagline';

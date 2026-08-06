@@ -3,6 +3,7 @@ import { MessageBubble } from './MessageBubble';
 import { ModeSelector } from './ModeSelector';
 import { CrisisBanner } from './CrisisBanner';
 import { AiLoadingBanner } from './AiLoadingBanner';
+import { CursiveReveal, CURSIVE_DRAW_SECONDS } from './CursiveReveal';
 import { getResponse, ConversationTurn } from '../lib/responses/responseEngine';
 import { Mode } from '../lib/responses/templates';
 import { StoredMessage, createId, loadMode, saveMode } from '../lib/storage';
@@ -78,6 +79,16 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
       <AiLoadingBanner />
       {showCrisisBanner && <CrisisBanner />}
       <div className="message-list">
+        {messages.length === 0 && pendingBotText === null && (
+          <div className="chat-empty-state">
+            <CursiveReveal variant="solace" className="cursive-reveal-chat-hero" />
+            <CursiveReveal
+              variant="tagline"
+              className="cursive-reveal-chat-tagline"
+              delaySeconds={CURSIVE_DRAW_SECONDS - 0.3}
+            />
+          </div>
+        )}
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} />
         ))}
