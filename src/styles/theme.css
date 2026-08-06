@@ -61,7 +61,7 @@ html {
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-family: 'Quicksand', 'Segoe UI', system-ui, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
   transition: background 0.4s ease, color 0.4s ease;
@@ -83,13 +83,6 @@ body {
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-}
-
-.brand-title {
-  font-family: 'Snell Roundhand', 'Brush Script MT', 'Segoe Script', 'Apple Chancery', cursive;
-  font-weight: 400;
-  font-style: normal;
-  letter-spacing: 0.02em;
 }
 
 .theme-toggle {
@@ -472,11 +465,6 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 1.5rem;
-}
-
-.app-header h1 {
-  font-size: 2rem;
-  margin: 0;
 }
 
 .app-header-controls {
