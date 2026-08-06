@@ -36,6 +36,13 @@
   box-sizing: border-box;
 }
 
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--glass-border) transparent;
