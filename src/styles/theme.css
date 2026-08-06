@@ -611,6 +611,45 @@ body {
   }
 }
 
+.cursive-reveal {
+  display: block;
+}
+
+.cursive-reveal-svg {
+  display: block;
+  width: auto;
+  overflow: visible;
+}
+
+.cursive-reveal-path {
+  fill: var(--color-text);
+  fill-opacity: 0;
+  stroke: var(--color-text);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursive-reveal-path {
+    transition: none !important;
+  }
+}
+
+.cursive-reveal-hero .cursive-reveal-svg {
+  height: 4.5rem;
+  margin: 0 auto;
+}
+
+.cursive-reveal-tagline .cursive-reveal-svg {
+  height: 1.6rem;
+  margin: 0.5rem auto 0;
+}
+
+.cursive-reveal-header .cursive-reveal-svg {
+  height: 2.4rem;
+}
+
 .welcome-hero {
   font-size: 1.35rem;
   font-weight: 500;

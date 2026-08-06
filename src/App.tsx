@@ -4,6 +4,7 @@ import { ThemeToggle } from './components/ThemeToggle';
 import { AmbientBackground } from './components/AmbientBackground';
 import { AiStatusIndicator } from './components/AiStatusIndicator';
 import { Sidebar } from './components/Sidebar';
+import { CursiveReveal } from './components/CursiveReveal';
 import {
   Conversation,
   StoredMessage,
@@ -134,7 +135,8 @@ export default function App() {
           <div className="onboarding-icon" aria-hidden="true">
             🌿
           </div>
-          <h1 className="brand-title">Welcome to Solace</h1>
+          <CursiveReveal variant="solace" className="cursive-reveal-hero" />
+          <CursiveReveal variant="tagline" className="cursive-reveal-tagline" delaySeconds={1.7} />
           <p className="welcome-hero">{welcomeMessage}</p>
           <p>
             Solace is a supportive companion that listens and responds to how you're
@@ -176,7 +178,7 @@ export default function App() {
             >
               {sidebarCollapsed ? '☰' : '⟨'}
             </button>
-            <h1 className="brand-title">Solace</h1>
+            <CursiveReveal variant="solace" className="cursive-reveal-header" />
           </div>
           <div className="app-header-controls">
             <AiStatusIndicator />
