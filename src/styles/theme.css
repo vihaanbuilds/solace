@@ -660,12 +660,14 @@ body {
 }
 
 .cursive-reveal-chat-hero .cursive-reveal-svg {
-  height: 5.5rem;
+  height: 9rem;
+  max-width: 90%;
 }
 
 .cursive-reveal-chat-tagline .cursive-reveal-svg {
-  height: 2rem;
-  margin-top: 0.5rem;
+  height: 3rem;
+  max-width: 80%;
+  margin-top: 0.75rem;
 }
 
 .welcome-hero {
