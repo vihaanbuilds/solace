@@ -260,7 +260,7 @@ export default function App() {
             </button>
             <CursiveReveal variant="solace" className="cursive-reveal-header" />
           </div>
-          <div className="app-header-controls">
+          <div className="app-header-controls app-header-controls-right">
             <AiStatusIndicator />
             <PrivacyToggle
               unlocked={privateUnlocked}
