@@ -197,6 +197,68 @@ describe('App', () => {
     });
   });
 
+  describe('private chats', () => {
+    function getPrivacyToggleButton(): HTMLElement {
+      return document.querySelector('.privacy-toggle-btn') as HTMLElement;
+    }
+
+    async function typeDigits(user: ReturnType<typeof userEvent.setup>, code: string) {
+      for (let i = 0; i < code.length; i += 1) {
+        await user.type(screen.getByLabelText(`Passcode digit ${i + 1}`), code[i]);
+      }
+    }
+
+    async function unlockPrivate(user: ReturnType<typeof userEvent.setup>, code = '13579') {
+      await user.click(getPrivacyToggleButton());
+      await typeDigits(user, code);
+    }
+
+    it('a new chat started while private is unlocked is hidden again once locked', async () => {
+      const user = userEvent.setup();
+      await completeOnboarding(user);
+
+      await unlockPrivate(user);
+      await user.click(screen.getByText('+ New chat'));
+      expect(within(getSidebar()).getByText('🔒 Private', { exact: false })).toBeInTheDocument();
+      expect(within(getSidebar()).getByText('Private conversation')).toBeInTheDocument();
+
+      await user.click(getPrivacyToggleButton());
+      expect(
+        within(getSidebar()).queryByText('Private conversation')
+      ).not.toBeInTheDocument();
+      expect(
+        within(getSidebar()).queryByText('🔒 Private', { exact: false })
+      ).not.toBeInTheDocument();
+    });
+
+    it('re-locking while viewing the private chat switches back to a visible conversation', async () => {
+      const user = userEvent.setup();
+      await completeOnboarding(user);
+
+      await unlockPrivate(user);
+      await user.click(screen.getByText('+ New chat'));
+      expect(screen.getByLabelText('Message input')).toBeInTheDocument();
+
+      await user.click(getPrivacyToggleButton());
+
+      // the chat window should no longer be showing the now-hidden private conversation
+      expect(getMessageList()).toBeInTheDocument();
+      expect(within(getSidebar()).queryByText('Private conversation')).not.toBeInTheDocument();
+    });
+
+    it('re-entering the correct passcode reveals the private chat again', async () => {
+      const user = userEvent.setup();
+      await completeOnboarding(user);
+
+      await unlockPrivate(user);
+      await user.click(screen.getByText('+ New chat'));
+      await user.click(getPrivacyToggleButton()); // lock
+
+      await unlockPrivate(user);
+      expect(within(getSidebar()).getByText('Private conversation')).toBeInTheDocument();
+    });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });

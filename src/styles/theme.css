@@ -107,6 +107,148 @@ body {
   transform: translateY(-1px);
 }
 
+.privacy-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.privacy-toggle-btn:hover {
+  transform: translateY(-1px);
+  color: var(--color-text);
+}
+
+.privacy-toggle-btn-active {
+  color: var(--color-text);
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+}
+
+.privacy-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 16, 30, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 200;
+}
+
+.privacy-modal-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 1.75rem;
+  border-radius: 1.5rem;
+  text-align: center;
+}
+
+.privacy-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.15rem;
+  color: var(--color-text);
+}
+
+.privacy-modal-body {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  color: var(--color-text-soft);
+  line-height: 1.4;
+}
+
+.passcode-boxes {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.passcode-box {
+  width: 2.6rem;
+  height: 3rem;
+  text-align: center;
+  font-size: 1.4rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--glass-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+:root[data-theme='dark'] .passcode-box {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.passcode-box:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.privacy-modal-error {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: var(--color-danger);
+}
+
+.privacy-modal-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.privacy-modal-link {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--color-text-soft);
+  text-decoration: underline;
+}
+
+.privacy-modal-link:hover {
+  color: var(--color-text);
+}
+
+.privacy-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.privacy-modal-btn-secondary,
+.privacy-modal-btn-danger {
+  border: none;
+  border-radius: 999px;
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: transform 0.15s ease;
+}
+
+.privacy-modal-btn-secondary {
+  background: var(--glass-bg);
+  color: var(--color-text);
+  border: 1px solid var(--glass-border);
+}
+
+.privacy-modal-btn-danger {
+  background: var(--color-danger);
+  color: #fff;
+}
+
+.privacy-modal-btn-secondary:hover,
+.privacy-modal-btn-danger:hover {
+  transform: translateY(-1px);
+}
+
 .ambient-background {
   position: fixed;
   inset: 0;

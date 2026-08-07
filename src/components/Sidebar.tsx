@@ -135,6 +135,55 @@ export function Sidebar({
   }
 
   const menuConversation = openMenuId ? sorted.find((c) => c.id === openMenuId) : undefined;
+  const normalConversations = sorted.filter((c) => !c.isPrivate);
+  const privateConversations = sorted.filter((c) => c.isPrivate);
+
+  function renderRow(conversation: Conversation) {
+    return (
+      <div key={conversation.id} className="sidebar-row">
+        {renamingId === conversation.id ? (
+          <input
+            className="sidebar-rename-input"
+            value={draftTitle}
+            autoFocus
+            onChange={(e) => setDraftTitle(e.target.value)}
+            onBlur={() => commitRename(conversation.id)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') commitRename(conversation.id);
+              if (e.key === 'Escape') setRenamingId(null);
+            }}
+            aria-label="Rename conversation"
+          />
+        ) : (
+          <button
+            className={`sidebar-item ${
+              conversation.id === activeConversationId ? 'sidebar-item-active' : ''
+            }`}
+            onClick={() => onSelect(conversation.id)}
+            aria-current={conversation.id === activeConversationId ? 'true' : undefined}
+          >
+            {conversation.title}
+          </button>
+        )}
+        <div
+          className={`sidebar-row-actions ${
+            openMenuId === conversation.id ? 'sidebar-row-actions-open' : ''
+          }`}
+        >
+          <button
+            ref={(el) => (kebabRefs.current[conversation.id] = el)}
+            className="sidebar-menu-btn"
+            aria-label={`Options for ${conversation.title}`}
+            aria-haspopup="menu"
+            aria-expanded={openMenuId === conversation.id}
+            onClick={() => toggleMenu(conversation)}
+          >
+            ⋮
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <nav
@@ -147,56 +196,17 @@ export function Sidebar({
           <button className="sidebar-new-chat" onClick={onNewChat}>
             + New chat
           </button>
-          {sorted.length > 0 && <div className="sidebar-label">Chats</div>}
           <div
             className="sidebar-list"
             ref={listRef}
             onScroll={() => setOpenMenuId(null)}
           >
-            {sorted.map((conversation) => (
-              <div key={conversation.id} className="sidebar-row">
-                {renamingId === conversation.id ? (
-                  <input
-                    className="sidebar-rename-input"
-                    value={draftTitle}
-                    autoFocus
-                    onChange={(e) => setDraftTitle(e.target.value)}
-                    onBlur={() => commitRename(conversation.id)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') commitRename(conversation.id);
-                      if (e.key === 'Escape') setRenamingId(null);
-                    }}
-                    aria-label="Rename conversation"
-                  />
-                ) : (
-                  <button
-                    className={`sidebar-item ${
-                      conversation.id === activeConversationId ? 'sidebar-item-active' : ''
-                    }`}
-                    onClick={() => onSelect(conversation.id)}
-                    aria-current={conversation.id === activeConversationId ? 'true' : undefined}
-                  >
-                    {conversation.title}
-                  </button>
-                )}
-                <div
-                  className={`sidebar-row-actions ${
-                    openMenuId === conversation.id ? 'sidebar-row-actions-open' : ''
-                  }`}
-                >
-                  <button
-                    ref={(el) => (kebabRefs.current[conversation.id] = el)}
-                    className="sidebar-menu-btn"
-                    aria-label={`Options for ${conversation.title}`}
-                    aria-haspopup="menu"
-                    aria-expanded={openMenuId === conversation.id}
-                    onClick={() => toggleMenu(conversation)}
-                  >
-                    ⋮
-                  </button>
-                </div>
-              </div>
-            ))}
+            {normalConversations.length > 0 && <div className="sidebar-label">Chats</div>}
+            {normalConversations.map(renderRow)}
+            {privateConversations.length > 0 && (
+              <div className="sidebar-label">🔒 Private</div>
+            )}
+            {privateConversations.map(renderRow)}
           </div>
         </>
       )}

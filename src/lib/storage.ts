@@ -12,6 +12,12 @@ export interface Conversation {
   createdAt: number;
   messages: StoredMessage[];
   titleIsCustom?: boolean;
+  isPrivate?: boolean;
+}
+
+export interface PrivatePasscodeRecord {
+  salt: string;
+  hash: string;
 }
 
 const CONVERSATIONS_KEY = 'solace.conversations';
@@ -20,6 +26,7 @@ const LEGACY_MESSAGES_KEY = 'solace.messages';
 const MODE_KEY = 'solace.mode';
 const THEME_KEY = 'solace.theme';
 const SIDEBAR_COLLAPSED_KEY = 'solace.sidebarCollapsed';
+const PRIVATE_PASSCODE_KEY = 'solace.privatePasscode';
 
 export function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -102,4 +109,22 @@ export function saveSidebarCollapsed(collapsed: boolean): void {
 
 export function loadSidebarCollapsed(): boolean {
   return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true';
+}
+
+export function savePrivatePasscodeRecord(record: PrivatePasscodeRecord): void {
+  localStorage.setItem(PRIVATE_PASSCODE_KEY, JSON.stringify(record));
+}
+
+export function loadPrivatePasscodeRecord(): PrivatePasscodeRecord | null {
+  const raw = localStorage.getItem(PRIVATE_PASSCODE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as PrivatePasscodeRecord;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPrivatePasscodeRecord(): void {
+  localStorage.removeItem(PRIVATE_PASSCODE_KEY);
 }

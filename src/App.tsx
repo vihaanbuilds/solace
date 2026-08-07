@@ -5,6 +5,7 @@ import { AmbientBackground } from './components/AmbientBackground';
 import { AiStatusIndicator } from './components/AiStatusIndicator';
 import { Sidebar } from './components/Sidebar';
 import { CursiveReveal, CURSIVE_DRAW_SECONDS } from './components/CursiveReveal';
+import { PrivacyToggle } from './components/PrivacyToggle';
 import {
   Conversation,
   StoredMessage,
@@ -21,12 +22,13 @@ import {
 import { WELCOME_MESSAGES } from './lib/content/welcomeMessages';
 import './styles/theme.css';
 
-function createConversation(): Conversation {
+function createConversation(isPrivate = false): Conversation {
   return {
     id: createId(),
-    title: 'New conversation',
+    title: isPrivate ? 'Private conversation' : 'New conversation',
     createdAt: Date.now(),
     messages: [],
+    isPrivate,
   };
 }
 
@@ -37,6 +39,7 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => loadSidebarCollapsed() || window.matchMedia('(max-width: 768px)').matches
   );
+  const [privateUnlocked, setPrivateUnlocked] = useState(false);
   const [welcomeMessage] = useState(
     () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
   );
@@ -61,14 +64,39 @@ export default function App() {
     }
 
     setConversations(loaded);
+
+    // Private mode always starts locked, so the restored active conversation
+    // must not be a private one even if that's what was last open.
     const storedActiveId = loadActiveConversationId();
-    const activeExists = storedActiveId && loaded.some((c) => c.id === storedActiveId);
-    setActiveConversationId(activeExists ? (storedActiveId as string) : loaded[0].id);
+    const restoredActive = loaded.find((c) => c.id === storedActiveId && !c.isPrivate);
+    if (restoredActive) {
+      setActiveConversationId(restoredActive.id);
+      return;
+    }
+
+    const firstVisible = loaded.find((c) => !c.isPrivate);
+    if (firstVisible) {
+      setActiveConversationId(firstVisible.id);
+      saveActiveConversationId(firstVisible.id);
+      return;
+    }
+
+    const fresh = createConversation();
+    const next = [fresh, ...loaded];
+    setConversations(next);
+    saveConversations(next);
+    setActiveConversationId(fresh.id);
+    saveActiveConversationId(fresh.id);
   }, []);
 
   const activeConversation = useMemo(
     () => conversations.find((c) => c.id === activeConversationId) ?? null,
     [conversations, activeConversationId]
+  );
+
+  const visibleConversations = useMemo(
+    () => conversations.filter((c) => !c.isPrivate || privateUnlocked),
+    [conversations, privateUnlocked]
   );
 
   function persist(next: Conversation[]) {
@@ -83,11 +111,42 @@ export default function App() {
   }
 
   function handleNewChat() {
-    const fresh = createConversation();
+    const fresh = createConversation(privateUnlocked);
     persist([fresh, ...conversations]);
     setActiveConversationId(fresh.id);
     saveActiveConversationId(fresh.id);
     closeSidebarOnMobile();
+  }
+
+  function handlePrivacyUnlock() {
+    setPrivateUnlocked(true);
+  }
+
+  function handlePrivacyLock() {
+    setPrivateUnlocked(false);
+    if (activeConversation?.isPrivate) {
+      const firstVisible = conversations.find((c) => !c.isPrivate);
+      if (firstVisible) {
+        setActiveConversationId(firstVisible.id);
+        saveActiveConversationId(firstVisible.id);
+      } else {
+        const fresh = createConversation();
+        persist([fresh, ...conversations]);
+        setActiveConversationId(fresh.id);
+        saveActiveConversationId(fresh.id);
+      }
+    }
+  }
+
+  function handleResetPrivateChats() {
+    const remaining = conversations.filter((c) => !c.isPrivate);
+    const finalList = remaining.length > 0 ? remaining : [createConversation()];
+    persist(finalList);
+    if (!finalList.some((c) => c.id === activeConversationId)) {
+      setActiveConversationId(finalList[0].id);
+      saveActiveConversationId(finalList[0].id);
+    }
+    setPrivateUnlocked(false);
   }
 
   function handleSelectConversation(id: string) {
@@ -180,7 +239,7 @@ export default function App() {
         />
       )}
       <Sidebar
-        conversations={conversations}
+        conversations={visibleConversations}
         activeConversationId={activeConversationId}
         onSelect={handleSelectConversation}
         onNewChat={handleNewChat}
@@ -203,6 +262,12 @@ export default function App() {
           </div>
           <div className="app-header-controls">
             <AiStatusIndicator />
+            <PrivacyToggle
+              unlocked={privateUnlocked}
+              onUnlock={handlePrivacyUnlock}
+              onLock={handlePrivacyLock}
+              onResetPrivateChats={handleResetPrivateChats}
+            />
             <ThemeToggle />
           </div>
         </header>
