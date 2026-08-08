@@ -5,7 +5,7 @@ import { AiLoadingBanner } from './AiLoadingBanner';
 import * as webllmEngine from '../lib/ai/webllmEngine';
 import * as storage from '../lib/storage';
 
-type Listener = (status: webllmEngine.EngineStatus, progress: number) => void;
+type Listener = (status: webllmEngine.EngineStatus, progress: number, statusText: string) => void;
 
 describe('AiLoadingBanner', () => {
   let listeners: Listener[];
@@ -99,7 +99,7 @@ describe('AiLoadingBanner', () => {
     it('explains the download and the temporary fallback while loading', () => {
       render(<AiLoadingBanner />);
       act(() => {
-        listeners.forEach((listener) => listener('loading', 0.2));
+        listeners.forEach((listener) => listener('loading', 0.2, ''));
       });
       expect(screen.getByText(/downloading onto your device/i)).toBeInTheDocument();
       expect(screen.getByText(/1–3 minutes/)).toBeInTheDocument();
@@ -109,12 +109,12 @@ describe('AiLoadingBanner', () => {
     it('disappears once the engine is ready', () => {
       render(<AiLoadingBanner />);
       act(() => {
-        listeners.forEach((listener) => listener('loading', 0.5));
+        listeners.forEach((listener) => listener('loading', 0.5, ''));
       });
       expect(screen.getByRole('status')).toBeInTheDocument();
 
       act(() => {
-        listeners.forEach((listener) => listener('ready', 1));
+        listeners.forEach((listener) => listener('ready', 1, ''));
       });
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });

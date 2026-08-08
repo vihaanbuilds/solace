@@ -661,6 +661,23 @@ body {
   line-height: 1.4;
 }
 
+.ai-loading-banner p {
+  margin: 0;
+}
+
+.ai-loading-detail {
+  margin-top: 0.4rem !important;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.75rem !important;
+  opacity: 0.8;
+}
+
+.ai-cloud-hint {
+  margin: 0.6rem 0 0 !important;
+  font-size: 0.78rem !important;
+  color: var(--color-text-soft);
+}
+
 .ai-opt-in-banner p {
   margin: 0 0 0.6rem;
 }

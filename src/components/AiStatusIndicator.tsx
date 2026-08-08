@@ -3,6 +3,7 @@ import {
   subscribeToEngineStatus,
   getEngineStatus,
   getEngineProgress,
+  getEngineStatusText,
   EngineStatus,
 } from '../lib/ai/webllmEngine';
 
@@ -14,10 +15,11 @@ const READY_TOAST_DURATION_MS = 5000;
 export function AiStatusIndicator() {
   const [status, setStatus] = useState<EngineStatus>(() => getEngineStatus());
   const [progress, setProgress] = useState<number>(() => getEngineProgress());
+  const [statusText, setStatusText] = useState<string>(() => getEngineStatusText());
   const [showReadyToast, setShowReadyToast] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = subscribeToEngineStatus((nextStatus, nextProgress) => {
+    const unsubscribe = subscribeToEngineStatus((nextStatus, nextProgress, nextText) => {
       setStatus((prevStatus) => {
         if (prevStatus !== 'ready' && nextStatus === 'ready') {
           setShowReadyToast(true);
@@ -26,6 +28,7 @@ export function AiStatusIndicator() {
         return nextStatus;
       });
       setProgress(nextProgress);
+      setStatusText(nextText);
     });
 
     return unsubscribe;
@@ -33,7 +36,7 @@ export function AiStatusIndicator() {
 
   if (status === 'loading') {
     return (
-      <div className="ai-status-pill glass" role="status">
+      <div className="ai-status-pill glass" role="status" title={statusText || undefined}>
         Loading local AI… {Math.round(progress * 100)}%
       </div>
     );

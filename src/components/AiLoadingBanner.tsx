@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   subscribeToEngineStatus,
   getEngineStatus,
+  getEngineStatusText,
   loadEngine,
   isWebGPUSupported,
   getRecommendedTier,
@@ -9,6 +10,7 @@ import {
   EngineStatus,
   ModelTier,
 } from '../lib/ai/webllmEngine';
+import { CLOUD_MODEL_INFO } from '../lib/ai/cloudEngine';
 import { loadAiOptIn, saveAiOptIn, loadAiTier, saveAiTier } from '../lib/storage';
 
 const TIER_ORDER: ModelTier[] = ['small', 'medium', 'large'];
@@ -22,6 +24,7 @@ function toLocalTier(stored: ModelTier | 'cloud' | null): ModelTier {
 
 export function AiLoadingBanner() {
   const [status, setStatus] = useState<EngineStatus>(() => getEngineStatus());
+  const [statusText, setStatusText] = useState<string>(() => getEngineStatusText());
   const [optIn, setOptIn] = useState<boolean | null>(() => loadAiOptIn());
   const [selectedTier, setSelectedTier] = useState<ModelTier>(() => toLocalTier(loadAiTier()));
 
@@ -31,7 +34,13 @@ export function AiLoadingBanner() {
     }
   }, [optIn, status]);
 
-  useEffect(() => subscribeToEngineStatus((nextStatus) => setStatus(nextStatus)), []);
+  useEffect(
+    () => subscribeToEngineStatus((nextStatus, _progress, nextText) => {
+      setStatus(nextStatus);
+      setStatusText(nextText);
+    }),
+    []
+  );
 
   function handleEnable() {
     saveAiOptIn(true);
@@ -84,6 +93,10 @@ export function AiLoadingBanner() {
             Not now
           </button>
         </div>
+        <p className="ai-cloud-hint">
+          In a hurry? Pick {CLOUD_MODEL_INFO.name} from the model menu next to the message box
+          instead — no download, works instantly, but sends messages to a server to reply.
+        </p>
       </div>
     );
   }
@@ -92,9 +105,12 @@ export function AiLoadingBanner() {
 
   return (
     <div className="ai-loading-banner glass" role="status">
-      Solace's local AI is downloading onto your device — this usually takes about 1–3
-      minutes. Until it's ready, you'll get quick pre-written responses instead of the
-      AI's own replies.
+      <p>
+        Solace's local AI is downloading onto your device — this usually takes about 1–3
+        minutes depending on your connection. Until it's ready, you'll get quick pre-written
+        responses instead of the AI's own replies.
+      </p>
+      {statusText && <p className="ai-loading-detail">{statusText}</p>}
     </div>
   );
 }

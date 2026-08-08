@@ -3,7 +3,7 @@ import { render, screen, act } from '@testing-library/react';
 import { AiStatusIndicator } from './AiStatusIndicator';
 import * as webllmEngine from '../lib/ai/webllmEngine';
 
-type Listener = (status: webllmEngine.EngineStatus, progress: number) => void;
+type Listener = (status: webllmEngine.EngineStatus, progress: number, statusText: string) => void;
 
 describe('AiStatusIndicator', () => {
   let listeners: Listener[];
@@ -34,7 +34,7 @@ describe('AiStatusIndicator', () => {
   it('shows a progress pill while loading', () => {
     render(<AiStatusIndicator />);
     act(() => {
-      listeners.forEach((listener) => listener('loading', 0.42));
+      listeners.forEach((listener) => listener('loading', 0.42, ''));
     });
     expect(screen.getByText('Loading local AI… 42%')).toBeInTheDocument();
   });
@@ -42,7 +42,7 @@ describe('AiStatusIndicator', () => {
   it('shows a one-time ready toast when the engine becomes ready, then hides it', () => {
     render(<AiStatusIndicator />);
     act(() => {
-      listeners.forEach((listener) => listener('ready', 1));
+      listeners.forEach((listener) => listener('ready', 1, ''));
     });
     expect(screen.getByText("Solace's AI is now active")).toBeInTheDocument();
 
@@ -55,7 +55,7 @@ describe('AiStatusIndicator', () => {
   it('renders nothing when unsupported', () => {
     render(<AiStatusIndicator />);
     act(() => {
-      listeners.forEach((listener) => listener('unsupported', 0));
+      listeners.forEach((listener) => listener('unsupported', 0, ''));
     });
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });

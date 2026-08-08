@@ -51,18 +51,25 @@ export interface ChatMessage {
   content: string;
 }
 
-type StatusListener = (status: EngineStatus, progress: number) => void;
+type StatusListener = (status: EngineStatus, progress: number, statusText: string) => void;
 
 let engine: MLCEngine | null = null;
 let status: EngineStatus = 'idle';
 let progress = 0;
+// WebLLM's own progress text (e.g. "Fetching param cache[52/219]: 340MB
+// fetched, 41 secs elapsed") is far more informative than a bare percentage
+// — surfacing it instead of discarding it is a real, free improvement to
+// how the download step feels, even though it can't make the transfer itself
+// any faster.
+let statusText = '';
 let activeTier: ModelTier | null = null;
 const listeners = new Set<StatusListener>();
 
-function setStatus(next: EngineStatus, nextProgress: number = progress): void {
+function setStatus(next: EngineStatus, nextProgress: number = progress, nextText: string = ''): void {
   status = next;
   progress = nextProgress;
-  listeners.forEach((listener) => listener(status, progress));
+  statusText = nextText;
+  listeners.forEach((listener) => listener(status, progress, statusText));
 }
 
 export function getEngineStatus(): EngineStatus {
@@ -71,6 +78,10 @@ export function getEngineStatus(): EngineStatus {
 
 export function getEngineProgress(): number {
   return progress;
+}
+
+export function getEngineStatusText(): string {
+  return statusText;
 }
 
 export function getActiveTier(): ModelTier | null {
@@ -124,7 +135,7 @@ export function loadEngine(tier: ModelTier = getRecommendedTier()): void {
     .then(({ CreateMLCEngine }) =>
       CreateMLCEngine(MODEL_TIERS[tier].modelId, {
         initProgressCallback: (report: InitProgressReport) => {
-          setStatus('loading', report.progress);
+          setStatus('loading', report.progress, report.text);
         },
       })
     )
