@@ -1211,6 +1211,88 @@ body {
   color: var(--color-text-soft);
 }
 
+.chat-input-row .model-picker-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.model-picker-trigger svg {
+  width: 0.9em;
+  height: 0.9em;
+}
+
+.model-picker-menu {
+  position: fixed;
+  padding: 0.4rem;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  z-index: 100;
+}
+
+.model-picker-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.7rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.model-picker-item:hover {
+  background: var(--glass-bg);
+}
+
+.model-picker-item-active {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+}
+
+.model-picker-item-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5rem;
+}
+
+.model-picker-item-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.model-picker-item-size {
+  font-size: 0.72rem;
+  color: var(--color-text-soft);
+  flex-shrink: 0;
+}
+
+.model-picker-item-tagline {
+  font-size: 0.75rem;
+  color: var(--color-text-soft);
+}
+
+.model-picker-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0.3rem 0.2rem;
+}
+
 .onboarding-screen {
   min-height: 100vh;
   display: flex;

@@ -13,16 +13,21 @@ import { loadAiOptIn, saveAiOptIn, loadAiTier, saveAiTier } from '../lib/storage
 
 const TIER_ORDER: ModelTier[] = ['small', 'medium', 'large'];
 
+// This banner is only about the on-device download decision — the stored
+// preference can also be 'cloud' (picked via the model picker), which isn't
+// a valid choice here, so fall back to the device recommendation for that.
+function toLocalTier(stored: ModelTier | 'cloud' | null): ModelTier {
+  return stored && stored !== 'cloud' ? stored : getRecommendedTier();
+}
+
 export function AiLoadingBanner() {
   const [status, setStatus] = useState<EngineStatus>(() => getEngineStatus());
   const [optIn, setOptIn] = useState<boolean | null>(() => loadAiOptIn());
-  const [selectedTier, setSelectedTier] = useState<ModelTier>(
-    () => loadAiTier() ?? getRecommendedTier()
-  );
+  const [selectedTier, setSelectedTier] = useState<ModelTier>(() => toLocalTier(loadAiTier()));
 
   useEffect(() => {
     if (optIn === true && status === 'idle') {
-      loadEngine(loadAiTier() ?? getRecommendedTier());
+      loadEngine(toLocalTier(loadAiTier()));
     }
   }, [optIn, status]);
 
@@ -59,13 +64,16 @@ export function AiLoadingBanner() {
               className={`ai-tier-pill ${selectedTier === tier ? 'ai-tier-pill-active' : ''}`}
               onClick={() => setSelectedTier(tier)}
             >
-              <span className="ai-tier-pill-label">{MODEL_TIERS[tier].label}</span>
+              <span className="ai-tier-pill-label">{MODEL_TIERS[tier].name}</span>
               <span className="ai-tier-pill-size">~{MODEL_TIERS[tier].approxSizeGB}GB</span>
             </button>
           ))}
         </div>
         <p className="ai-tier-description">
-          {MODEL_TIERS[selectedTier].description}
+          <strong>
+            {MODEL_TIERS[selectedTier].name} {MODEL_TIERS[selectedTier].version}
+          </strong>{' '}
+          — {MODEL_TIERS[selectedTier].tagline}. {MODEL_TIERS[selectedTier].description}
           {selectedTier !== recommended &&
             TIER_ORDER.indexOf(selectedTier) > TIER_ORDER.indexOf(recommended) &&
             " This is bigger than what we'd normally suggest for your device — it should still work, just expect a longer download."}

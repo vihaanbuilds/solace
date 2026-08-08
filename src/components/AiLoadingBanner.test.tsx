@@ -57,7 +57,7 @@ describe('AiLoadingBanner', () => {
 
     it('offers a size picker and remembers the picked tier when enabled', async () => {
       const user = userEvent.setup();
-      let storedTier: webllmEngine.ModelTier | null = null;
+      let storedTier: storage.ModelTier | null = null;
       const saveTierSpy = vi
         .spyOn(storage, 'saveAiTier')
         .mockImplementation((tier) => (storedTier = tier));
@@ -65,7 +65,7 @@ describe('AiLoadingBanner', () => {
       render(<AiLoadingBanner />);
 
       expect(screen.getByRole('radiogroup', { name: /ai model size/i })).toBeInTheDocument();
-      await user.click(screen.getByRole('radio', { name: /lighter/i }));
+      await user.click(screen.getByRole('radio', { name: /sprout/i }));
       await user.click(screen.getByText('Enable on-device AI'));
 
       expect(saveTierSpy).toHaveBeenCalledWith('small');

@@ -4,31 +4,42 @@ export type ModelTier = 'small' | 'medium' | 'large';
 
 export interface ModelTierInfo {
   modelId: string;
-  label: string;
+  name: string;
+  version: string;
+  tagline: string;
   description: string;
   approxSizeGB: number;
 }
 
 // Real, valid model IDs from @mlc-ai/web-llm's prebuilt config — quality
 // scales with size, so this is a genuine light/balanced/strongest ladder,
-// not just three names for the same thing.
+// not just three names for the same thing. The user-facing name/version is
+// product branding, not the underlying model family — the real model stays
+// an implementation detail (still disclosed honestly on the how-it-works
+// page), same as any product that ships an open model under its own name.
 export const MODEL_TIERS: Record<ModelTier, ModelTierInfo> = {
   small: {
     modelId: 'Llama-3.2-1B-Instruct-q4f16_1-MLC',
-    label: 'Lighter',
-    description: 'Smallest download — works well on almost any device.',
+    name: 'Sprout',
+    version: 'v1.4.12',
+    tagline: 'Best for phones & lower storage',
+    description: 'Our lightest model — smooth on phones and devices with less space to spare.',
     approxSizeGB: 1,
   },
   medium: {
     modelId: 'gemma-2-2b-it-q4f16_1-MLC',
-    label: 'Balanced',
-    description: 'Noticeably more thoughtful, for a bit more data.',
+    name: 'Bud',
+    version: 'v2.1.6',
+    tagline: 'Balanced for most phones & laptops',
+    description: 'A step up in depth, while still staying comfortable on most modern devices.',
     approxSizeGB: 1.6,
   },
   large: {
     modelId: 'Llama-3.2-3B-Instruct-q4f16_1-MLC',
-    label: 'Strongest',
-    description: 'The most capable responses, at the largest download.',
+    name: 'Bloom',
+    version: 'v3.0.9',
+    tagline: 'Best for computers, most capable',
+    description: 'Our fullest model — the most capable responses, ideal on a computer with room to spare.',
     approxSizeGB: 1.7,
   },
 };

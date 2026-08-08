@@ -1,4 +1,5 @@
 import { Mode } from '../responses/templates';
+import type { ModelTier } from './webllmEngine';
 
 // Grounded in the same handful of therapeutic principles as the fallback
 // engine (see templates.ts) — Rogers' unconditional positive regard and
@@ -43,6 +44,29 @@ function buildAgeGuidance(age: number | null | undefined): string {
   return `\n\nThe person you're talking to is ${age} years old. Naturally tailor your language, examples, and level of formality to someone that age — casual and relatable for a teenager, a little more mature in tone for a young adult — without ever mentioning their age or sounding condescending.`;
 }
 
-export function buildSystemPrompt(mode: Mode, age?: number | null): string {
-  return `${SHARED_INSTRUCTIONS}\n\n${MODE_PERSONAS[mode]}${buildAgeGuidance(age)}`;
+// Smaller models drift off these rules more easily than the largest tier,
+// so they get extra, more literal reinforcement to close the quality gap —
+// same underlying instructions, just spelled out more directly for a model
+// with less room to infer nuance on its own.
+const TIER_REINFORCEMENT: Partial<Record<ModelTier, string>> = {
+  small: `\n\nLean on simple, direct sentences over clever or indirect phrasing. Focus on one feeling at a time instead of covering a lot at once. Hold tightly to the rules above, especially always ending on a genuine question — when in doubt, keep it short, warm, and concrete rather than improvising something elaborate.`,
+  medium: `\n\nFavor clear, concrete phrasing over anything too clever or roundabout, and stay disciplined about the rules above, especially always ending on a genuine question.`,
+};
+
+// The cloud model is search-tuned by default and keeps reaching for bold
+// text, bullet lists, and citation brackets like [1][2] even when asked not
+// to — none of which render as anything but literal punctuation in a plain
+// chat bubble. This has to be stated explicitly and forcefully, since the
+// base instructions alone don't reliably override that habit.
+const CLOUD_FORMATTING_INSTRUCTIONS = `\n\nThis reply is shown in a plain chat bubble with no markdown rendering and no citations list. Write in flowing, plain conversational sentences only — never use bold or italic markup, bullet points, numbered lists, headers, or citation markers like [1] or [2]. If you'd normally offer a few options, weave them naturally into a sentence instead of listing them.`;
+
+export function buildSystemPrompt(
+  mode: Mode,
+  age?: number | null,
+  tier?: ModelTier | null,
+  isCloud?: boolean
+): string {
+  const reinforcement = tier ? TIER_REINFORCEMENT[tier] ?? '' : '';
+  const formatting = isCloud ? CLOUD_FORMATTING_INSTRUCTIONS : '';
+  return `${SHARED_INSTRUCTIONS}\n\n${MODE_PERSONAS[mode]}${buildAgeGuidance(age)}${reinforcement}${formatting}`;
 }

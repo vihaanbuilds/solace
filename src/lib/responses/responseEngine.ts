@@ -13,7 +13,9 @@ import {
   Mode,
 } from './templates';
 import { buildSystemPrompt } from '../ai/systemPrompt';
-import { getEngineStatus, generateReply, ChatMessage } from '../ai/webllmEngine';
+import { getActiveTier, getEngineStatus, generateReply, ChatMessage } from '../ai/webllmEngine';
+import { generateCloudReply } from '../ai/cloudEngine';
+import { loadAiTier } from '../storage';
 
 export interface BotReply {
   text: string;
@@ -60,14 +62,31 @@ export async function getResponse(
     };
   }
 
-  if (getEngineStatus() === 'ready') {
+  const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
+  const historyMessages: ChatMessage[] = recentHistory.map(
+    (turn): ChatMessage => ({ role: turn.role, content: turn.content })
+  );
+  const selectedTier = loadAiTier();
+
+  if (selectedTier === 'cloud') {
     try {
-      const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
       const messages: ChatMessage[] = [
-        { role: 'system', content: buildSystemPrompt(mode, age) },
-        ...recentHistory.map(
-          (turn): ChatMessage => ({ role: turn.role, content: turn.content })
-        ),
+        { role: 'system', content: buildSystemPrompt(mode, age, null, true) },
+        ...historyMessages,
+        { role: 'user', content: message },
+      ];
+      const text = await generateCloudReply(messages, onToken);
+      if (text) {
+        return { text, isCrisis: false, detection, source: 'ai' };
+      }
+    } catch {
+      // Fall through to the deterministic fallback on any cloud failure.
+    }
+  } else if (getEngineStatus() === 'ready') {
+    try {
+      const messages: ChatMessage[] = [
+        { role: 'system', content: buildSystemPrompt(mode, age, getActiveTier()) },
+        ...historyMessages,
         { role: 'user', content: message },
       ];
       const text = await generateReply(messages, onToken);

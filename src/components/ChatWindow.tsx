@@ -3,6 +3,7 @@ import { MessageBubble } from './MessageBubble';
 import { ModeSelector } from './ModeSelector';
 import { CrisisBanner } from './CrisisBanner';
 import { AiLoadingBanner } from './AiLoadingBanner';
+import { ModelPicker } from './ModelPicker';
 import { CursiveReveal } from './CursiveReveal';
 import { TypewriterGreeting } from './TypewriterGreeting';
 import { getResponse, ConversationTurn } from '../lib/responses/responseEngine';
@@ -123,6 +124,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
           aria-label="Message input"
           disabled={pendingBotText !== null}
         />
+        <ModelPicker />
         <button onClick={handleSend} disabled={pendingBotText !== null}>
           Send
         </button>

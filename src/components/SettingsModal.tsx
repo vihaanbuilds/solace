@@ -9,7 +9,7 @@ import {
 } from '../lib/googleAuth';
 import {
   EngineStatus,
-  ModelTier,
+  ModelTier as LocalTier,
   MODEL_TIERS,
   getActiveTier,
   getEngineStatus,
@@ -19,20 +19,25 @@ import {
   switchTier,
   subscribeToEngineStatus,
 } from '../lib/ai/webllmEngine';
-import { loadAiOptIn, saveAiOptIn, saveAiTier } from '../lib/storage';
+import { CLOUD_MODEL_INFO } from '../lib/ai/cloudEngine';
+import { ModelTier as Choice, loadAiOptIn, saveAiOptIn, saveAiTier, loadAiTier } from '../lib/storage';
 
-const TIER_ORDER: ModelTier[] = ['small', 'medium', 'large'];
+const TIER_ORDER: LocalTier[] = ['small', 'medium', 'large'];
 
 function describeAiStatus(
+  selected: Choice | null,
   optIn: boolean | null,
   status: EngineStatus,
-  activeTier: ModelTier | null
+  activeTier: LocalTier | null
 ): string {
+  if (selected === 'cloud') {
+    return `Active — using ${CLOUD_MODEL_INFO.name} ${CLOUD_MODEL_INFO.version}. Your messages are sent to a server to generate replies.`;
+  }
   if (!isWebGPUSupported()) {
-    return "Not supported on this device — you'll always get quick pre-written responses.";
+    return "On-device AI isn't supported here — you'll always get quick pre-written responses unless you pick Canopy below.";
   }
   if (status === 'ready' && activeTier) {
-    return `Active — running the ${MODEL_TIERS[activeTier].label.toLowerCase()} model locally on your device.`;
+    return `Active — running ${MODEL_TIERS[activeTier].name} ${MODEL_TIERS[activeTier].version} locally on your device.`;
   }
   if (status === 'loading') return 'Downloading — this usually takes 1–3 minutes.';
   if (optIn) return 'Enabled — pick a size below.';
@@ -62,6 +67,7 @@ export function SettingsModal({
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [aiOptIn, setAiOptIn] = useState<boolean | null>(() => loadAiOptIn());
   const [engineStatus, setEngineStatus] = useState<EngineStatus>(() => getEngineStatus());
+  const [selectedTier, setSelectedTier] = useState<Choice | null>(() => loadAiTier());
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -73,9 +79,11 @@ export function SettingsModal({
 
   useEffect(() => subscribeToEngineStatus((status) => setEngineStatus(status)), []);
 
-  function handleSelectTier(tier: ModelTier) {
-    saveAiOptIn(true);
+  function handleSelectTier(tier: Choice) {
     saveAiTier(tier);
+    setSelectedTier(tier);
+    if (tier === 'cloud') return;
+    saveAiOptIn(true);
     setAiOptIn(true);
     const current = getEngineStatus();
     if (current === 'idle' || current === 'unsupported' || current === 'error') {
@@ -123,29 +131,39 @@ export function SettingsModal({
 
             <div className="settings-section">
               <p className="settings-section-label">AI model</p>
-              <p className="settings-row-title">On-device AI</p>
+              <p className="settings-row-title">AI model</p>
               <p className="settings-row-desc settings-ai-desc">
-                {describeAiStatus(aiOptIn, engineStatus, getActiveTier())}
+                {describeAiStatus(selectedTier, aiOptIn, engineStatus, getActiveTier())}
               </p>
-              <div className="ai-tier-picker" role="radiogroup" aria-label="AI model size">
+              <div className="ai-tier-picker" role="radiogroup" aria-label="AI model">
                 {TIER_ORDER.map((tier) => (
                   <button
                     key={tier}
                     role="radio"
-                    aria-checked={getActiveTier() === tier}
+                    aria-checked={selectedTier === tier}
                     disabled={!isWebGPUSupported() || engineStatus === 'loading'}
-                    className={`ai-tier-pill ${getActiveTier() === tier ? 'ai-tier-pill-active' : ''}`}
+                    className={`ai-tier-pill ${selectedTier === tier ? 'ai-tier-pill-active' : ''}`}
                     onClick={() => handleSelectTier(tier)}
                   >
-                    <span className="ai-tier-pill-label">{MODEL_TIERS[tier].label}</span>
+                    <span className="ai-tier-pill-label">{MODEL_TIERS[tier].name}</span>
                     <span className="ai-tier-pill-size">~{MODEL_TIERS[tier].approxSizeGB}GB</span>
                   </button>
                 ))}
+                <button
+                  role="radio"
+                  aria-checked={selectedTier === 'cloud'}
+                  className={`ai-tier-pill ${selectedTier === 'cloud' ? 'ai-tier-pill-active' : ''}`}
+                  onClick={() => handleSelectTier('cloud')}
+                >
+                  <span className="ai-tier-pill-label">{CLOUD_MODEL_INFO.name}</span>
+                  <span className="ai-tier-pill-size">Cloud</span>
+                </button>
               </div>
-              {!getActiveTier() && (
+              {!selectedTier && isWebGPUSupported() && (
                 <p className="settings-row-desc">
-                  Recommended for this device: {MODEL_TIERS[getRecommendedTier()].label}. Pick a
-                  bigger one if you don't mind using more data.
+                  Recommended for this device: {MODEL_TIERS[getRecommendedTier()].name}. Pick a
+                  bigger one if you don't mind using more data, or Canopy to use the cloud model
+                  instead.
                 </p>
               )}
             </div>

@@ -25,7 +25,7 @@ export interface UserProfile {
   dateOfBirth: string;
 }
 
-export type ModelTier = 'small' | 'medium' | 'large';
+export type ModelTier = 'small' | 'medium' | 'large' | 'cloud';
 
 const CONVERSATIONS_KEY = 'solace.conversations';
 const ACTIVE_CONVERSATION_KEY = 'solace.activeConversationId';
@@ -191,7 +191,7 @@ export function saveAiTier(tier: ModelTier): void {
 
 export function loadAiTier(): ModelTier | null {
   const raw = localStorage.getItem(AI_TIER_KEY);
-  return raw === 'small' || raw === 'medium' || raw === 'large' ? raw : null;
+  return raw === 'small' || raw === 'medium' || raw === 'large' || raw === 'cloud' ? raw : null;
 }
 
 // Full local reset for the "delete account" settings action — sweeps every

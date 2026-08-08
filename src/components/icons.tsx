@@ -122,6 +122,14 @@ export function ChevronLeftIcon(props: IconProps) {
   );
 }
 
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <polyline points="5 8.5 12 15 19 8.5" />
+    </svg>
+  );
+}
+
 export function CloseIcon(props: IconProps) {
   return (
     <svg {...base(props)}>
