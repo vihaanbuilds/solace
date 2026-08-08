@@ -131,6 +131,29 @@ body {
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
 }
 
+.google-profile-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem 0.3rem 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.google-profile-chip:hover {
+  transform: translateY(-1px);
+}
+
+.google-profile-chip img {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+}
+
 .privacy-modal-backdrop {
   position: fixed;
   inset: 0;

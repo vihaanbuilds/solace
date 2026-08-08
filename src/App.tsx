@@ -6,6 +6,7 @@ import { AiStatusIndicator } from './components/AiStatusIndicator';
 import { Sidebar } from './components/Sidebar';
 import { CursiveReveal, CURSIVE_DRAW_SECONDS } from './components/CursiveReveal';
 import { PrivacyToggle } from './components/PrivacyToggle';
+import { GoogleProfile, clearGoogleProfile, loadGoogleProfile } from './lib/googleAuth';
 import {
   Conversation,
   StoredMessage,
@@ -40,6 +41,9 @@ export default function App() {
     () => loadSidebarCollapsed() || window.matchMedia('(max-width: 768px)').matches
   );
   const [privateUnlocked, setPrivateUnlocked] = useState(false);
+  const [googleProfile, setGoogleProfile] = useState<GoogleProfile | null>(() =>
+    loadGoogleProfile()
+  );
   const [welcomeMessage] = useState(
     () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
   );
@@ -147,6 +151,11 @@ export default function App() {
       saveActiveConversationId(finalList[0].id);
     }
     setPrivateUnlocked(false);
+  }
+
+  function handleGoogleSignOut() {
+    clearGoogleProfile();
+    setGoogleProfile(null);
   }
 
   function handleSelectConversation(id: string) {
@@ -268,6 +277,18 @@ export default function App() {
               onLock={handlePrivacyLock}
               onResetPrivateChats={handleResetPrivateChats}
             />
+            {googleProfile && (
+              <button
+                className="google-profile-chip glass"
+                onClick={handleGoogleSignOut}
+                title={`Signed in as ${googleProfile.name || googleProfile.email} — click to sign out`}
+              >
+                {googleProfile.picture && (
+                  <img src={googleProfile.picture} alt="" referrerPolicy="no-referrer" />
+                )}
+                <span>{googleProfile.name.split(' ')[0] || 'You'}</span>
+              </button>
+            )}
             <ThemeToggle />
           </div>
         </header>
