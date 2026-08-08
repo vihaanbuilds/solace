@@ -219,16 +219,14 @@ describe('App', () => {
 
       await unlockPrivate(user);
       await user.click(screen.getByText('+ New chat'));
-      expect(within(getSidebar()).getByText('🔒 Private', { exact: false })).toBeInTheDocument();
+      expect(within(getSidebar()).getByText('Private')).toBeInTheDocument();
       expect(within(getSidebar()).getByText('Private conversation')).toBeInTheDocument();
 
       await user.click(getPrivacyToggleButton());
       expect(
         within(getSidebar()).queryByText('Private conversation')
       ).not.toBeInTheDocument();
-      expect(
-        within(getSidebar()).queryByText('🔒 Private', { exact: false })
-      ).not.toBeInTheDocument();
+      expect(within(getSidebar()).queryByText('Private')).not.toBeInTheDocument();
     });
 
     it('re-locking while viewing the private chat switches back to a visible conversation', async () => {

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { CursiveReveal } from './components/CursiveReveal';
 import { AmbientBackground } from './components/AmbientBackground';
 import { ThemeToggle } from './components/ThemeToggle';
+import { LotusLogo } from './components/LotusLogo';
+import { ArrowUpRightIcon, LinkIcon } from './components/icons';
 import {
   GoogleProfile,
   isGoogleSignInConfigured,
@@ -85,6 +87,7 @@ export function Landing() {
 
       <header className="landing-nav">
         <a href="/" className="landing-nav-brand" aria-label="Solace home">
+          <LotusLogo className="landing-nav-brand-icon" />
           <CursiveReveal variant="solace" className="cursive-reveal-nav" />
         </a>
         <nav className="landing-nav-links" aria-label="Page sections">
@@ -105,7 +108,7 @@ export function Landing() {
             </button>
           ) : (
             <button className="landing-nav-btn-primary" onClick={goToApp}>
-              Try Solace ↗
+              Try Solace <ArrowUpRightIcon />
             </button>
           )}
         </div>
@@ -129,7 +132,7 @@ export function Landing() {
           </p>
           <div className="landing-cta-row">
             <button className="landing-cta-primary" onClick={goToApp}>
-              Try Solace free ↗
+              Try Solace free <ArrowUpRightIcon />
             </button>
             <div className="landing-google-btn-wrap">
               {googleAvailable ? (
@@ -151,7 +154,7 @@ export function Landing() {
         <div className="landing-meta-row">
           <span>4 min read</span>
           <button className="landing-share-btn" onClick={handleShare}>
-            🔗 Share
+            <LinkIcon /> Share
           </button>
         </div>
 

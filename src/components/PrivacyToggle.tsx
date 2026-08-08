@@ -6,6 +6,7 @@ import {
   savePrivatePasscodeRecord,
 } from '../lib/storage';
 import { createPasscodeRecord, verifyPasscode } from '../lib/privacy/passcode';
+import { LockIcon, UnlockIcon } from './icons';
 
 const CODE_LENGTH = 5;
 
@@ -120,7 +121,7 @@ export function PrivacyToggle({ unlocked, onUnlock, onLock, onResetPrivateChats 
         onClick={handleToggleClick}
         aria-pressed={unlocked}
       >
-        {unlocked ? '🔓' : '🔒'} Private
+        {unlocked ? <UnlockIcon /> : <LockIcon />} Private
       </button>
 
       {stage !== 'closed' &&

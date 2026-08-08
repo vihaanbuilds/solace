@@ -17,8 +17,15 @@
 }
 
 .landing-nav-brand {
-  display: block;
-  line-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.landing-nav-brand-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  color: var(--color-text);
 }
 
 .cursive-reveal-nav .cursive-reveal-svg {
@@ -52,6 +59,9 @@
 }
 
 .landing-nav-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   border: none;
   border-radius: 999px;
   padding: 0.55rem 1.2rem;
@@ -141,6 +151,9 @@
 }
 
 .landing-cta-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   border: none;
   border-radius: 999px;
   padding: 0.85rem 1.75rem;
@@ -189,6 +202,9 @@
 }
 
 .landing-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   border: 1px solid var(--glass-border);
   border-radius: 999px;
   padding: 0.4rem 0.9rem;

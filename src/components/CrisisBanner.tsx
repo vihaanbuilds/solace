@@ -1,3 +1,5 @@
+import { ChatBubbleIcon, PhoneIcon } from './icons';
+
 export function CrisisBanner() {
   return (
     <div className="crisis-banner" role="alert">
@@ -6,10 +8,10 @@ export function CrisisBanner() {
         to face this alone.
       </p>
       <p>
-        📞 <strong>988 Suicide &amp; Crisis Lifeline</strong> — call or text 988
+        <PhoneIcon /> <strong>988 Suicide &amp; Crisis Lifeline</strong> — call or text 988
       </p>
       <p>
-        💬 <strong>Crisis Text Line</strong> — text HOME to 741741
+        <ChatBubbleIcon /> <strong>Crisis Text Line</strong> — text HOME to 741741
       </p>
     </div>
   );

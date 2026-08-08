@@ -6,6 +6,8 @@ import { AiStatusIndicator } from './components/AiStatusIndicator';
 import { Sidebar } from './components/Sidebar';
 import { CursiveReveal, CURSIVE_DRAW_SECONDS } from './components/CursiveReveal';
 import { PrivacyToggle } from './components/PrivacyToggle';
+import { LotusLogo } from './components/LotusLogo';
+import { ChevronLeftIcon, MenuIcon } from './components/icons';
 import { GoogleProfile, clearGoogleProfile, loadGoogleProfile } from './lib/googleAuth';
 import {
   Conversation,
@@ -210,9 +212,7 @@ export default function App() {
       <div className="onboarding-screen">
         <AmbientBackground />
         <div className="onboarding-card glass-strong">
-          <div className="onboarding-icon" aria-hidden="true">
-            🌿
-          </div>
+          <LotusLogo className="onboarding-icon" />
           <CursiveReveal variant="solace" className="cursive-reveal-hero" />
           <CursiveReveal
             variant="tagline"
@@ -265,7 +265,7 @@ export default function App() {
               aria-label={sidebarCollapsed ? 'Show chat history' : 'Hide chat history'}
               title={sidebarCollapsed ? 'Show chat history' : 'Hide chat history'}
             >
-              {sidebarCollapsed ? '☰' : '⟨'}
+              {sidebarCollapsed ? <MenuIcon /> : <ChevronLeftIcon />}
             </button>
             <CursiveReveal variant="solace" className="cursive-reveal-header" />
           </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { loadTheme, saveTheme } from '../lib/storage';
+import { MoonIcon, SunIcon } from './icons';
 
 type Theme = 'light' | 'dark';
 
@@ -17,7 +18,7 @@ export function ThemeToggle() {
       aria-label="Toggle theme"
       className="theme-toggle glass"
     >
-      {theme === 'light' ? '🌙' : '☀️'}
+      {theme === 'light' ? <MoonIcon /> : <SunIcon />}
     </button>
   );
 }

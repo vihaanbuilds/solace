@@ -94,11 +94,52 @@ body {
   box-shadow: var(--glass-shadow);
 }
 
+.lotus-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.lotus-logo-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.lotus-logo-outline {
+  display: none;
+}
+
+:root[data-theme='dark'] .lotus-logo-solid {
+  display: none;
+}
+
+:root[data-theme='dark'] .lotus-logo-outline {
+  display: block;
+}
+
+.ambient-lotus {
+  position: absolute;
+  width: min(60vw, 900px);
+  height: auto;
+  aspect-ratio: 140 / 95;
+  right: -8vw;
+  bottom: -10vw;
+  opacity: 0.07;
+  color: var(--color-text);
+}
+
 .theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   width: 2.5rem;
   height: 2.5rem;
-  font-size: 1.1rem;
   cursor: pointer;
   transition: transform 0.15s ease;
 }
@@ -463,6 +504,11 @@ body {
   margin: 0.25rem 0;
 }
 
+.crisis-banner svg {
+  vertical-align: -0.2em;
+  color: var(--color-accent-2);
+}
+
 .ai-loading-banner {
   margin: 0 1rem 0.75rem;
   padding: 0.7rem 1rem;
@@ -508,11 +554,13 @@ body {
 }
 
 .sidebar-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--glass-border) !important;
   border-radius: 0.75rem;
   width: 2.5rem;
   height: 2.5rem;
-  font-size: 1.1rem;
   font-weight: 600;
   color: var(--color-text-soft);
   cursor: pointer;
@@ -549,8 +597,8 @@ body {
 }
 
 .sidebar-brand-icon {
-  font-size: 1.3rem;
-  line-height: 1;
+  width: 1.4rem;
+  height: 1.4rem;
 }
 
 .sidebar-brand-text {
@@ -597,11 +645,13 @@ body {
 }
 
 .sidebar-search-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: transparent;
   cursor: pointer;
   color: var(--color-text-soft);
-  font-size: 0.85rem;
   padding: 0.4rem 0.5rem;
   border-radius: 0.5rem;
   flex-shrink: 0;
@@ -627,6 +677,12 @@ body {
   color: var(--color-text-soft);
   padding: 0 0.4rem;
   margin-top: 0.25rem;
+}
+
+.sidebar-label-private {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
 .sidebar-list {
@@ -878,8 +934,10 @@ body {
 }
 
 .onboarding-icon {
-  font-size: 2rem;
-  margin-bottom: 0.25rem;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--color-text);
 }
 
 @keyframes card-in {

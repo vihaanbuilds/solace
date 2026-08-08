@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Conversation } from '../lib/storage';
+import { LotusLogo } from './LotusLogo';
+import { CloseIcon, EditIcon, LockIcon, SearchIcon, ShareIcon, TrashIcon } from './icons';
 
 interface SidebarProps {
   conversations: Conversation[];
@@ -219,9 +221,7 @@ export function Sidebar({
       {!collapsed && (
         <>
           <div className="sidebar-brand">
-            <span className="sidebar-brand-icon" aria-hidden="true">
-              🌿
-            </span>
+            <LotusLogo className="sidebar-brand-icon" />
             <span className="sidebar-brand-text">Solace</span>
           </div>
           <button className="sidebar-new-chat" onClick={onNewChat}>
@@ -246,12 +246,12 @@ export function Sidebar({
                 onClick={toggleSearch}
                 aria-label="Close search"
               >
-                ✕
+                <CloseIcon />
               </button>
             </div>
           ) : (
             <button className="sidebar-search-btn" onClick={toggleSearch}>
-              🔍 Search chats
+              <SearchIcon /> Search chats
             </button>
           )}
           <div
@@ -263,7 +263,9 @@ export function Sidebar({
             {normalConversations.length > 0 && <div className="sidebar-label">Chats</div>}
             {normalConversations.map(renderRow)}
             {privateConversations.length > 0 && (
-              <div className="sidebar-label">🔒 Private</div>
+              <div className="sidebar-label sidebar-label-private">
+                <LockIcon /> Private
+              </div>
             )}
             {privateConversations.map(renderRow)}
           </div>
@@ -285,21 +287,21 @@ export function Sidebar({
               className="sidebar-row-menu-item"
               onClick={() => startRename(menuConversation)}
             >
-              ✏️ Rename
+              <EditIcon /> Rename
             </button>
             <button
               role="menuitem"
               className="sidebar-row-menu-item"
               onClick={() => handleShare(menuConversation)}
             >
-              📤 Share
+              <ShareIcon /> Share
             </button>
             <button
               role="menuitem"
               className="sidebar-row-menu-item sidebar-row-menu-item-danger"
               onClick={() => handleDelete(menuConversation)}
             >
-              🗑️ Delete
+              <TrashIcon /> Delete
             </button>
           </div>,
           document.body
