@@ -7,11 +7,14 @@ import { Sidebar } from './components/Sidebar';
 import { CursiveReveal, CURSIVE_DRAW_SECONDS } from './components/CursiveReveal';
 import { PrivacyToggle } from './components/PrivacyToggle';
 import { LotusLogo } from './components/LotusLogo';
+import { ProfileSetupModal } from './components/ProfileSetupModal';
+import { SettingsModal } from './components/SettingsModal';
 import { ChevronLeftIcon, MenuIcon } from './components/icons';
-import { GoogleProfile, clearGoogleProfile, loadGoogleProfile } from './lib/googleAuth';
+import { GoogleProfile, loadGoogleProfile } from './lib/googleAuth';
 import {
   Conversation,
   StoredMessage,
+  UserProfile,
   createId,
   deriveTitle,
   loadConversations,
@@ -21,6 +24,10 @@ import {
   loadTheme,
   loadSidebarCollapsed,
   saveSidebarCollapsed,
+  loadUserProfile,
+  saveUserProfile,
+  getFirstName,
+  clearAllLocalData,
 } from './lib/storage';
 import { WELCOME_MESSAGES } from './lib/content/welcomeMessages';
 import './styles/theme.css';
@@ -46,9 +53,13 @@ export default function App() {
   const [googleProfile, setGoogleProfile] = useState<GoogleProfile | null>(() =>
     loadGoogleProfile()
   );
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [welcomeMessage] = useState(
     () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
   );
+  const firstName = userProfile ? getFirstName(userProfile.fullName) : 'You';
 
   useEffect(() => {
     saveSidebarCollapsed(sidebarCollapsed);
@@ -155,9 +166,32 @@ export default function App() {
     setPrivateUnlocked(false);
   }
 
-  function handleGoogleSignOut() {
-    clearGoogleProfile();
-    setGoogleProfile(null);
+  function handleReadyClick() {
+    if (userProfile) {
+      setOnboarded(true);
+    } else {
+      setShowProfileSetup(true);
+    }
+  }
+
+  function handleProfileComplete(profile: UserProfile) {
+    saveUserProfile(profile);
+    setUserProfile(profile);
+    setShowProfileSetup(false);
+    setOnboarded(true);
+  }
+
+  function handleDeleteAllChats() {
+    const fresh = createConversation();
+    persist([fresh]);
+    setActiveConversationId(fresh.id);
+    saveActiveConversationId(fresh.id);
+    setPrivateUnlocked(false);
+  }
+
+  function handleDeleteAccount() {
+    clearAllLocalData();
+    window.location.reload();
   }
 
   function handleSelectConversation(id: string) {
@@ -231,8 +265,9 @@ export default function App() {
             validates and soothes, <strong>Uplifter</strong> gently encourages, and{' '}
             <strong>Reflector</strong> helps you think things through.
           </p>
-          <button onClick={() => setOnboarded(true)}>I'm ready</button>
+          <button onClick={handleReadyClick}>I'm ready</button>
         </div>
+        {showProfileSetup && <ProfileSetupModal onComplete={handleProfileComplete} />}
       </div>
     );
   }
@@ -255,6 +290,9 @@ export default function App() {
         onRename={handleRenameConversation}
         onDelete={handleDeleteConversation}
         collapsed={sidebarCollapsed}
+        userFirstName={firstName}
+        avatarUrl={googleProfile?.picture}
+        onOpenSettings={() => setShowSettings(true)}
       />
       <div className="main-column">
         <header className="app-header">
@@ -277,18 +315,6 @@ export default function App() {
               onLock={handlePrivacyLock}
               onResetPrivateChats={handleResetPrivateChats}
             />
-            {googleProfile && (
-              <button
-                className="google-profile-chip glass"
-                onClick={handleGoogleSignOut}
-                title={`Signed in as ${googleProfile.name || googleProfile.email} — click to sign out`}
-              >
-                {googleProfile.picture && (
-                  <img src={googleProfile.picture} alt="" referrerPolicy="no-referrer" />
-                )}
-                <span>{googleProfile.name.split(' ')[0] || 'You'}</span>
-              </button>
-            )}
             <ThemeToggle />
           </div>
         </header>
@@ -299,6 +325,16 @@ export default function App() {
           />
         )}
       </div>
+      {showSettings && (
+        <SettingsModal
+          firstName={firstName}
+          googleProfile={googleProfile}
+          onGoogleProfileChange={setGoogleProfile}
+          onDeleteAllChats={handleDeleteAllChats}
+          onDeleteAccount={handleDeleteAccount}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
     </div>
   );
 }

@@ -23,6 +23,11 @@ const MODE_PERSONAS: Record<Mode, string> = {
     'Your tone in this conversation is Reflector: calm and curious, helping the person think through and unpack what they are feeling.',
 };
 
-export function buildSystemPrompt(mode: Mode): string {
-  return `${SHARED_INSTRUCTIONS}\n\n${MODE_PERSONAS[mode]}`;
+function buildAgeGuidance(age: number | null | undefined): string {
+  if (age === null || age === undefined) return '';
+  return `\n\nThe person you're talking to is ${age} years old. Naturally tailor your language, examples, and level of formality to someone that age — casual and relatable for a teenager, a little more mature in tone for a young adult — without ever mentioning their age or sounding condescending.`;
+}
+
+export function buildSystemPrompt(mode: Mode, age?: number | null): string {
+  return `${SHARED_INSTRUCTIONS}\n\n${MODE_PERSONAS[mode]}${buildAgeGuidance(age)}`;
 }

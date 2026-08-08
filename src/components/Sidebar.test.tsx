@@ -19,6 +19,8 @@ function renderSidebar(overrides: Partial<React.ComponentProps<typeof Sidebar>> 
       onRename={() => {}}
       onDelete={() => {}}
       collapsed={false}
+      userFirstName="Alex"
+      onOpenSettings={() => {}}
       {...overrides}
     />
   );

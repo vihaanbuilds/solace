@@ -1,17 +1,26 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { render, screen, within, waitFor } from '@testing-library/react';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
-import { loadConversations } from './lib/storage';
+import { loadConversations, loadUserProfile } from './lib/storage';
 
 describe('App', () => {
   beforeEach(() => {
     localStorage.clear();
   });
 
+  async function fillProfileSetup(user: ReturnType<typeof userEvent.setup>) {
+    await user.type(screen.getByLabelText('Full name'), 'Alex Rivera');
+    fireEvent.change(screen.getByLabelText('Date of birth'), {
+      target: { value: '2008-05-15' },
+    });
+    await user.click(screen.getByText('Continue'));
+  }
+
   async function completeOnboarding(user: ReturnType<typeof userEvent.setup>) {
     render(<App />);
     await user.click(screen.getByText("I'm ready"));
+    await fillProfileSetup(user);
   }
 
   function getMessageList(): HTMLElement {
@@ -85,6 +94,7 @@ describe('App', () => {
     const user = userEvent.setup();
     const { unmount } = render(<App />);
     await user.click(screen.getByText("I'm ready"));
+    await fillProfileSetup(user);
 
     await sendAndAwaitReply(user, 'I feel happy today');
     unmount();
@@ -188,6 +198,7 @@ describe('App', () => {
       const user = userEvent.setup();
       const { unmount } = render(<App />);
       await user.click(screen.getByText("I'm ready"));
+      await fillProfileSetup(user);
       await user.click(screen.getByLabelText('Hide chat history'));
       unmount();
 
@@ -254,6 +265,66 @@ describe('App', () => {
 
       await unlockPrivate(user);
       expect(within(getSidebar()).getByText('Private conversation')).toBeInTheDocument();
+    });
+  });
+
+  describe('profile setup', () => {
+    it('requires a full name and date of birth before entering the app for a new user', async () => {
+      const user = userEvent.setup();
+      render(<App />);
+
+      await user.click(screen.getByText("I'm ready"));
+      expect(screen.queryByLabelText('Message input')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Full name')).toBeInTheDocument();
+
+      await fillProfileSetup(user);
+
+      expect(screen.getByLabelText('Message input')).toBeInTheDocument();
+      expect(loadUserProfile()).toEqual({ fullName: 'Alex Rivera', dateOfBirth: '2008-05-15' });
+      expect(within(getSidebar()).getByText('Alex')).toBeInTheDocument();
+    });
+
+    it('skips the profile setup modal for a returning user with a saved profile', async () => {
+      const user = userEvent.setup();
+      await completeOnboarding(user);
+
+      await user.click(screen.getByLabelText('Hide chat history'));
+      await user.click(screen.getByLabelText('Show chat history'));
+
+      expect(screen.queryByLabelText('Full name')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Message input')).toBeInTheDocument();
+    });
+  });
+
+  describe('settings', () => {
+    function getSettingsButton(): HTMLElement {
+      return screen.getByLabelText('Open settings');
+    }
+
+    it('deletes all chat history after confirming', async () => {
+      const user = userEvent.setup();
+      await completeOnboarding(user);
+
+      await sendAndAwaitReply(user, 'I feel really jealous of my friends');
+      await user.click(getSettingsButton());
+      const [deleteChatsBtn] = screen.getAllByText('Delete');
+      await user.click(deleteChatsBtn);
+      await user.click(screen.getByText('Yes, delete everything'));
+
+      expect(loadConversations()).toHaveLength(1);
+      expect(loadConversations()[0].messages).toHaveLength(0);
+    });
+
+    it('deleting the account clears all local data', async () => {
+      const user = userEvent.setup();
+
+      await completeOnboarding(user);
+      await user.click(getSettingsButton());
+      const deleteButtons = screen.getAllByText('Delete');
+      await user.click(deleteButtons[1]);
+      await user.click(screen.getByText('Yes, delete my account'));
+
+      expect(loadUserProfile()).toBeNull();
     });
   });
 

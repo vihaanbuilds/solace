@@ -45,7 +45,8 @@ export async function getResponse(
   message: string,
   mode: Mode,
   history: ConversationTurn[] = [],
-  onToken?: (partial: string) => void
+  onToken?: (partial: string) => void,
+  age?: number | null
 ): Promise<BotReply> {
   const crisis = isCrisis(message);
   const detection = detectEmotion(message);
@@ -63,7 +64,7 @@ export async function getResponse(
     try {
       const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
       const messages: ChatMessage[] = [
-        { role: 'system', content: buildSystemPrompt(mode) },
+        { role: 'system', content: buildSystemPrompt(mode, age) },
         ...recentHistory.map(
           (turn): ChatMessage => ({ role: turn.role, content: turn.content })
         ),

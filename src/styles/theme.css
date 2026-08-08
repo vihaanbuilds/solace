@@ -172,29 +172,6 @@ body {
   background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
 }
 
-.google-profile-chip {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  border-radius: 999px;
-  padding: 0.3rem 0.75rem 0.3rem 0.3rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-
-.google-profile-chip:hover {
-  transform: translateY(-1px);
-}
-
-.google-profile-chip img {
-  width: 1.6rem;
-  height: 1.6rem;
-  border-radius: 50%;
-}
-
 .privacy-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -287,7 +264,8 @@ body {
 }
 
 .privacy-modal-btn-secondary,
-.privacy-modal-btn-danger {
+.privacy-modal-btn-danger,
+.privacy-modal-btn-primary {
   border: none;
   border-radius: 999px;
   padding: 0.6rem 1.25rem;
@@ -308,9 +286,174 @@ body {
   color: #fff;
 }
 
+.privacy-modal-btn-primary {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  color: var(--color-text);
+  width: 100%;
+}
+
 .privacy-modal-btn-secondary:hover,
-.privacy-modal-btn-danger:hover {
+.privacy-modal-btn-danger:hover,
+.privacy-modal-btn-primary:hover {
   transform: translateY(-1px);
+}
+
+/* Profile setup modal */
+
+.profile-setup-card {
+  max-width: 380px;
+  text-align: left;
+}
+
+.profile-setup-card .privacy-modal-title,
+.profile-setup-card .privacy-modal-body {
+  text-align: center;
+}
+
+.profile-setup-field {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.profile-setup-field span {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-soft);
+  margin-bottom: 0.35rem;
+}
+
+.profile-setup-field input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--glass-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+:root[data-theme='dark'] .profile-setup-field input {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.profile-setup-field input:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* Settings modal */
+
+.settings-modal-card {
+  max-width: 420px;
+  text-align: left;
+  position: relative;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.settings-close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 0.5rem;
+  display: flex;
+}
+
+.settings-close-btn:hover {
+  background: var(--glass-bg);
+  color: var(--color-text);
+}
+
+.settings-title {
+  text-align: left;
+  margin-bottom: 1.25rem;
+}
+
+.settings-section {
+  margin-bottom: 1.5rem;
+}
+
+.settings-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+  margin: 0 0 0.6rem;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-section .settings-row:first-of-type {
+  border-top: none;
+}
+
+.settings-row-title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.settings-row-desc {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-soft);
+}
+
+.settings-secondary-btn {
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--color-text);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease;
+}
+
+.settings-secondary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.settings-danger-btn {
+  border: 1px solid var(--color-danger);
+  background: transparent;
+  color: var(--color-danger);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.settings-danger-btn:hover {
+  background: rgba(224, 90, 110, 0.1);
+  transform: translateY(-1px);
+}
+
+.settings-google-btn-wrap {
+  display: flex;
+  justify-content: center;
+  min-height: 2.75rem;
+  margin-bottom: 1rem;
 }
 
 .ambient-background {
@@ -803,6 +946,66 @@ body {
   font-size: 0.85rem;
 }
 
+.sidebar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.sidebar-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.sidebar-profile-avatar {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.sidebar-profile-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  color: var(--color-text);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.sidebar-profile-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-settings-btn {
+  border: none;
+  background: transparent;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  padding: 0.4rem;
+  border-radius: 0.6rem;
+  display: flex;
+  flex-shrink: 0;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-settings-btn:hover {
+  background: var(--glass-bg);
+  color: var(--color-text);
+}
+
 .main-column {
   flex: 1;
   display: flex;
@@ -1004,10 +1207,35 @@ body {
   max-width: 90%;
 }
 
-.cursive-reveal-chat-tagline .cursive-reveal-svg {
-  height: 3rem;
-  max-width: 80%;
-  margin-top: 0.75rem;
+.chat-hero-greeting {
+  margin: 0.75rem 0 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--color-text-soft);
+  text-align: center;
+  min-height: 1.6em;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  margin-left: 1px;
+  color: var(--color-accent-2);
+  animation: cursor-blink 0.9s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typewriter-cursor {
+    animation: none;
+  }
 }
 
 .welcome-hero {
@@ -1089,8 +1317,8 @@ body {
     height: 5rem;
   }
 
-  .cursive-reveal-chat-tagline .cursive-reveal-svg {
-    height: 1.8rem;
+  .chat-hero-greeting {
+    font-size: 1.05rem;
   }
 
   .cursive-reveal-hero .cursive-reveal-svg {

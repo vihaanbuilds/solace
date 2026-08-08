@@ -262,6 +262,25 @@ export function DeviceIcon(props: IconProps) {
   );
 }
 
+export function SettingsIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 3.5v2.1M12 18.4v2.1M20.5 12h-2.1M5.6 12H3.5M17.7 6.3l-1.5 1.5M7.8 16.2l-1.5 1.5M17.7 17.7l-1.5-1.5M7.8 7.8 6.3 6.3" />
+    </svg>
+  );
+}
+
+export function LogOutIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M9 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H9" />
+      <line x1="20" y1="12" x2="10" y2="12" />
+      <polyline points="16 8 20 12 16 16" />
+    </svg>
+  );
+}
+
 export function QuoteIcon(props: IconProps) {
   return (
     <svg {...base(props)} fill="currentColor" stroke="none">

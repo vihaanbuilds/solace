@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Conversation } from '../lib/storage';
 import { LotusLogo } from './LotusLogo';
-import { CloseIcon, EditIcon, LockIcon, SearchIcon, ShareIcon, TrashIcon } from './icons';
+import { CloseIcon, EditIcon, LockIcon, SearchIcon, SettingsIcon, ShareIcon, TrashIcon } from './icons';
 
 interface SidebarProps {
   conversations: Conversation[];
@@ -12,6 +12,9 @@ interface SidebarProps {
   onRename: (id: string, title: string) => void;
   onDelete: (id: string) => void;
   collapsed: boolean;
+  userFirstName: string;
+  avatarUrl?: string;
+  onOpenSettings: () => void;
 }
 
 const MENU_WIDTH = 168;
@@ -36,6 +39,9 @@ export function Sidebar({
   onRename,
   onDelete,
   collapsed,
+  userFirstName,
+  avatarUrl,
+  onOpenSettings,
 }: SidebarProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState('');
@@ -268,6 +274,26 @@ export function Sidebar({
               </div>
             )}
             {privateConversations.map(renderRow)}
+          </div>
+          <div className="sidebar-footer">
+            <div className="sidebar-profile">
+              {avatarUrl ? (
+                <img className="sidebar-profile-avatar" src={avatarUrl} alt="" referrerPolicy="no-referrer" />
+              ) : (
+                <span className="sidebar-profile-avatar sidebar-profile-avatar-fallback" aria-hidden="true">
+                  {userFirstName.charAt(0).toUpperCase()}
+                </span>
+              )}
+              <span className="sidebar-profile-name">{userFirstName}</span>
+            </div>
+            <button
+              className="sidebar-settings-btn"
+              onClick={onOpenSettings}
+              aria-label="Open settings"
+              title="Settings"
+            >
+              <SettingsIcon />
+            </button>
           </div>
         </>
       )}

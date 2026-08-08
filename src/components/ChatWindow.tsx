@@ -3,10 +3,19 @@ import { MessageBubble } from './MessageBubble';
 import { ModeSelector } from './ModeSelector';
 import { CrisisBanner } from './CrisisBanner';
 import { AiLoadingBanner } from './AiLoadingBanner';
-import { CursiveReveal, CURSIVE_DRAW_SECONDS } from './CursiveReveal';
+import { CursiveReveal } from './CursiveReveal';
+import { TypewriterGreeting } from './TypewriterGreeting';
 import { getResponse, ConversationTurn } from '../lib/responses/responseEngine';
 import { Mode } from '../lib/responses/templates';
-import { StoredMessage, createId, loadMode, saveMode } from '../lib/storage';
+import {
+  StoredMessage,
+  createId,
+  loadMode,
+  saveMode,
+  loadUserProfile,
+  getFirstName,
+  calculateAge,
+} from '../lib/storage';
 
 interface ChatWindowProps {
   messages: StoredMessage[];
@@ -17,7 +26,10 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
   const [mode, setMode] = useState<Mode>(() => (loadMode() as Mode) || 'comforter');
   const [input, setInput] = useState('');
   const [pendingBotText, setPendingBotText] = useState<string | null>(null);
+  const [userProfile] = useState(() => loadUserProfile());
   const endRef = useRef<HTMLDivElement>(null);
+  const age = userProfile ? calculateAge(userProfile.dateOfBirth) : null;
+  const firstName = userProfile ? getFirstName(userProfile.fullName) : null;
 
   useEffect(() => {
     saveMode(mode);
@@ -51,9 +63,15 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
 
     setPendingBotText('');
 
-    const reply = await getResponse(text, mode, history, (partial) => {
-      setPendingBotText(partial);
-    });
+    const reply = await getResponse(
+      text,
+      mode,
+      history,
+      (partial) => {
+        setPendingBotText(partial);
+      },
+      age
+    );
 
     const botMessage: StoredMessage = {
       id: createId(),
@@ -82,11 +100,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
         {messages.length === 0 && pendingBotText === null && (
           <div className="chat-empty-state">
             <CursiveReveal variant="solace" className="cursive-reveal-chat-hero" />
-            <CursiveReveal
-              variant="tagline"
-              className="cursive-reveal-chat-tagline"
-              delaySeconds={CURSIVE_DRAW_SECONDS - 0.3}
-            />
+            <TypewriterGreeting name={firstName} className="chat-hero-greeting" />
           </div>
         )}
         {messages.map((m) => (

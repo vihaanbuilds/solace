@@ -20,6 +20,11 @@ export interface PrivatePasscodeRecord {
   hash: string;
 }
 
+export interface UserProfile {
+  fullName: string;
+  dateOfBirth: string;
+}
+
 const CONVERSATIONS_KEY = 'solace.conversations';
 const ACTIVE_CONVERSATION_KEY = 'solace.activeConversationId';
 const LEGACY_MESSAGES_KEY = 'solace.messages';
@@ -27,6 +32,7 @@ const MODE_KEY = 'solace.mode';
 const THEME_KEY = 'solace.theme';
 const SIDEBAR_COLLAPSED_KEY = 'solace.sidebarCollapsed';
 const PRIVATE_PASSCODE_KEY = 'solace.privatePasscode';
+const USER_PROFILE_KEY = 'solace.userProfile';
 
 export function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -127,4 +133,55 @@ export function loadPrivatePasscodeRecord(): PrivatePasscodeRecord | null {
 
 export function clearPrivatePasscodeRecord(): void {
   localStorage.removeItem(PRIVATE_PASSCODE_KEY);
+}
+
+export function saveUserProfile(profile: UserProfile): void {
+  localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
+}
+
+export function loadUserProfile(): UserProfile | null {
+  const raw = localStorage.getItem(USER_PROFILE_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as UserProfile;
+  } catch {
+    return null;
+  }
+}
+
+export function clearUserProfile(): void {
+  localStorage.removeItem(USER_PROFILE_KEY);
+}
+
+export function getFirstName(fullName: string): string {
+  return fullName.trim().split(/\s+/)[0] || 'there';
+}
+
+export function calculateAge(dateOfBirth: string): number | null {
+  const dob = new Date(dateOfBirth);
+  if (Number.isNaN(dob.getTime())) return null;
+
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const monthDiff = now.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) {
+    age -= 1;
+  }
+  return age >= 0 ? age : null;
+}
+
+// Full local reset for the "delete account" settings action — sweeps every
+// key this app has ever written rather than naming each one, so it can't
+// silently miss a newly added piece of state.
+export function clearAllLocalData(): void {
+  // Collect keys before removing any — Storage.key(i) is index-based and
+  // live, so deleting mid-iteration would skip entries as indices shift.
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('solace.')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach((key) => localStorage.removeItem(key));
 }
