@@ -602,7 +602,7 @@ body {
   position: absolute;
   top: -8px;
   left: -8px;
-  right: 30%;
+  right: -8px;
   bottom: -8px;
   border-radius: 1.5rem;
   filter: blur(20px);
@@ -659,6 +659,41 @@ body {
   font-size: 0.85rem;
   color: var(--color-text-soft);
   line-height: 1.4;
+}
+
+.ai-opt-in-banner p {
+  margin: 0 0 0.6rem;
+}
+
+.ai-opt-in-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.ai-opt-in-actions button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.ai-opt-in-actions button:hover {
+  transform: translateY(-1px);
+}
+
+.ai-opt-in-actions button:first-child {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  color: var(--color-text);
+}
+
+.ai-opt-in-decline {
+  background: var(--glass-bg);
+  color: var(--color-text-soft);
+  border: 1px solid var(--glass-border) !important;
 }
 
 .app-layout {

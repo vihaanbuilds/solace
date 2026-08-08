@@ -35,7 +35,7 @@ export function subscribeToEngineStatus(listener: StatusListener): () => void {
   return () => listeners.delete(listener);
 }
 
-function isWebGPUSupported(): boolean {
+export function isWebGPUSupported(): boolean {
   return typeof navigator !== 'undefined' && 'gpu' in navigator;
 }
 

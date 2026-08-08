@@ -33,6 +33,7 @@ const THEME_KEY = 'solace.theme';
 const SIDEBAR_COLLAPSED_KEY = 'solace.sidebarCollapsed';
 const PRIVATE_PASSCODE_KEY = 'solace.privatePasscode';
 const USER_PROFILE_KEY = 'solace.userProfile';
+const AI_OPT_IN_KEY = 'solace.aiOptIn';
 
 export function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -168,6 +169,17 @@ export function calculateAge(dateOfBirth: string): number | null {
     age -= 1;
   }
   return age >= 0 ? age : null;
+}
+
+// null means "hasn't decided yet" (show the ask); true/false is a saved choice.
+export function saveAiOptIn(optedIn: boolean): void {
+  localStorage.setItem(AI_OPT_IN_KEY, String(optedIn));
+}
+
+export function loadAiOptIn(): boolean | null {
+  const raw = localStorage.getItem(AI_OPT_IN_KEY);
+  if (raw === null) return null;
+  return raw === 'true';
 }
 
 // Full local reset for the "delete account" settings action — sweeps every

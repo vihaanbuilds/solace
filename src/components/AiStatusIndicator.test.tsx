@@ -11,7 +11,6 @@ describe('AiStatusIndicator', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     listeners = [];
-    vi.spyOn(webllmEngine, 'loadEngine').mockImplementation(() => {});
     vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('idle');
     vi.spyOn(webllmEngine, 'getEngineProgress').mockReturnValue(0);
     vi.spyOn(webllmEngine, 'subscribeToEngineStatus').mockImplementation((listener: Listener) => {
@@ -30,11 +29,6 @@ describe('AiStatusIndicator', () => {
   it('renders nothing while idle', () => {
     render(<AiStatusIndicator />);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
-  });
-
-  it('starts loading the engine on mount', () => {
-    render(<AiStatusIndicator />);
-    expect(webllmEngine.loadEngine).toHaveBeenCalled();
   });
 
   it('shows a progress pill while loading', () => {

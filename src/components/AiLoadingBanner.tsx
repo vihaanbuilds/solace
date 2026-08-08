@@ -1,12 +1,53 @@
 import { useEffect, useState } from 'react';
-import { subscribeToEngineStatus, getEngineStatus, EngineStatus } from '../lib/ai/webllmEngine';
+import {
+  subscribeToEngineStatus,
+  getEngineStatus,
+  loadEngine,
+  isWebGPUSupported,
+  EngineStatus,
+} from '../lib/ai/webllmEngine';
+import { loadAiOptIn, saveAiOptIn } from '../lib/storage';
 
 export function AiLoadingBanner() {
   const [status, setStatus] = useState<EngineStatus>(() => getEngineStatus());
+  const [optIn, setOptIn] = useState<boolean | null>(() => loadAiOptIn());
 
   useEffect(() => {
-    return subscribeToEngineStatus((nextStatus) => setStatus(nextStatus));
-  }, []);
+    if (optIn === true && status === 'idle') {
+      loadEngine();
+    }
+  }, [optIn, status]);
+
+  useEffect(() => subscribeToEngineStatus((nextStatus) => setStatus(nextStatus)), []);
+
+  function handleEnable() {
+    saveAiOptIn(true);
+    setOptIn(true);
+  }
+
+  function handleDecline() {
+    saveAiOptIn(false);
+    setOptIn(false);
+  }
+
+  if (optIn === null && isWebGPUSupported()) {
+    return (
+      <div className="ai-loading-banner ai-opt-in-banner glass" role="status">
+        <p>
+          Solace can run a smarter AI entirely on your device instead of quick pre-written
+          replies — it's a one-time ~1.7GB download and works offline afterward. Your
+          messages never leave your device either way, and you can turn this on or off
+          anytime in Settings.
+        </p>
+        <div className="ai-opt-in-actions">
+          <button onClick={handleEnable}>Enable on-device AI</button>
+          <button onClick={handleDecline} className="ai-opt-in-decline">
+            Not now
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (status !== 'loading') return null;
 

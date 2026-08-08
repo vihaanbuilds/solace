@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  loadEngine,
   subscribeToEngineStatus,
   getEngineStatus,
   getEngineProgress,
@@ -9,14 +8,15 @@ import {
 
 const READY_TOAST_DURATION_MS = 5000;
 
+// Loading the model itself is triggered from AiLoadingBanner, gated behind
+// the user's explicit opt-in (it's a ~1.7GB download) — this component only
+// reflects whatever state that decision put the engine into.
 export function AiStatusIndicator() {
   const [status, setStatus] = useState<EngineStatus>(() => getEngineStatus());
   const [progress, setProgress] = useState<number>(() => getEngineProgress());
   const [showReadyToast, setShowReadyToast] = useState(false);
 
   useEffect(() => {
-    loadEngine();
-
     const unsubscribe = subscribeToEngineStatus((nextStatus, nextProgress) => {
       setStatus((prevStatus) => {
         if (prevStatus !== 'ready' && nextStatus === 'ready') {

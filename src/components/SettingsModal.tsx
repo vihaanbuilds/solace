@@ -7,6 +7,24 @@ import {
   isGoogleSignInConfigured,
   renderGoogleSignInButton,
 } from '../lib/googleAuth';
+import {
+  EngineStatus,
+  getEngineStatus,
+  isWebGPUSupported,
+  loadEngine,
+  subscribeToEngineStatus,
+} from '../lib/ai/webllmEngine';
+import { loadAiOptIn, saveAiOptIn } from '../lib/storage';
+
+function describeAiStatus(optIn: boolean | null, status: EngineStatus): string {
+  if (!isWebGPUSupported()) {
+    return "Not supported on this device — you'll always get quick pre-written responses.";
+  }
+  if (status === 'ready') return 'Active — running locally on your device.';
+  if (status === 'loading') return 'Downloading — this usually takes 1–3 minutes.';
+  if (optIn) return "Enabled — it'll download (~1.7GB) the next time it's needed.";
+  return 'Off. A one-time ~1.7GB download, works offline afterward.';
+}
 
 interface SettingsModalProps {
   firstName: string;
@@ -29,6 +47,8 @@ export function SettingsModal({
 }: SettingsModalProps) {
   const [view, setView] = useState<View>('main');
   const googleBtnRef = useRef<HTMLDivElement>(null);
+  const [aiOptIn, setAiOptIn] = useState<boolean | null>(() => loadAiOptIn());
+  const [engineStatus, setEngineStatus] = useState<EngineStatus>(() => getEngineStatus());
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -37,6 +57,14 @@ export function SettingsModal({
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  useEffect(() => subscribeToEngineStatus((status) => setEngineStatus(status)), []);
+
+  function handleEnableAi() {
+    saveAiOptIn(true);
+    setAiOptIn(true);
+    if (getEngineStatus() === 'idle') loadEngine();
+  }
 
   useEffect(() => {
     if (view !== 'switch-account' || !googleBtnRef.current || !isGoogleSignInConfigured()) return;
@@ -71,6 +99,25 @@ export function SettingsModal({
                   <p className="settings-row-desc">Switch between light and dark mode.</p>
                 </div>
                 <ThemeToggle />
+              </div>
+            </div>
+
+            <div className="settings-section">
+              <p className="settings-section-label">AI model</p>
+              <div className="settings-row">
+                <div>
+                  <p className="settings-row-title">On-device AI</p>
+                  <p className="settings-row-desc">{describeAiStatus(aiOptIn, engineStatus)}</p>
+                </div>
+                {!(aiOptIn && engineStatus !== 'idle') && (
+                  <button
+                    className="settings-secondary-btn"
+                    disabled={!isWebGPUSupported()}
+                    onClick={handleEnableAi}
+                  >
+                    Enable
+                  </button>
+                )}
               </div>
             </div>
 
