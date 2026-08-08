@@ -21,6 +21,11 @@ function buildTranscript(conversation: Conversation): string {
   return [`Solace conversation — ${conversation.title}`, '', ...lines].join('\n');
 }
 
+function matchesQuery(conversation: Conversation, query: string): boolean {
+  if (conversation.title.toLowerCase().includes(query)) return true;
+  return conversation.messages.some((m) => m.text.toLowerCase().includes(query));
+}
+
 export function Sidebar({
   conversations,
   activeConversationId,
@@ -34,11 +39,30 @@ export function Sidebar({
   const [draftTitle, setDraftTitle] = useState('');
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const kebabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const menuNodeRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const sorted = [...conversations].sort((a, b) => b.createdAt - a.createdAt);
+  const trimmedQuery = searchQuery.trim().toLowerCase();
+  const searched = trimmedQuery
+    ? sorted.filter((c) => matchesQuery(c, trimmedQuery))
+    : sorted;
+
+  useEffect(() => {
+    if (searchOpen) searchInputRef.current?.focus();
+  }, [searchOpen]);
+
+  function toggleSearch() {
+    setSearchOpen((prev) => {
+      const next = !prev;
+      if (!next) setSearchQuery('');
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -135,8 +159,9 @@ export function Sidebar({
   }
 
   const menuConversation = openMenuId ? sorted.find((c) => c.id === openMenuId) : undefined;
-  const normalConversations = sorted.filter((c) => !c.isPrivate);
-  const privateConversations = sorted.filter((c) => c.isPrivate);
+  const normalConversations = searched.filter((c) => !c.isPrivate);
+  const privateConversations = searched.filter((c) => c.isPrivate);
+  const noResults = trimmedQuery.length > 0 && searched.length === 0;
 
   function renderRow(conversation: Conversation) {
     return (
@@ -193,14 +218,48 @@ export function Sidebar({
     >
       {!collapsed && (
         <>
+          <div className="sidebar-brand">
+            <span className="sidebar-brand-icon" aria-hidden="true">
+              🌿
+            </span>
+            <span className="sidebar-brand-text">Solace</span>
+          </div>
           <button className="sidebar-new-chat" onClick={onNewChat}>
             + New chat
           </button>
+          {searchOpen ? (
+            <div className="sidebar-search-row">
+              <input
+                ref={searchInputRef}
+                className="sidebar-search-input"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') toggleSearch();
+                }}
+                placeholder="Search chats..."
+                aria-label="Search chats"
+              />
+              <button
+                className="sidebar-search-close"
+                onClick={toggleSearch}
+                aria-label="Close search"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button className="sidebar-search-btn" onClick={toggleSearch}>
+              🔍 Search chats
+            </button>
+          )}
           <div
             className="sidebar-list"
             ref={listRef}
             onScroll={() => setOpenMenuId(null)}
           >
+            {noResults && <div className="sidebar-no-results">No chats match "{searchQuery.trim()}"</div>}
             {normalConversations.length > 0 && <div className="sidebar-label">Chats</div>}
             {normalConversations.map(renderRow)}
             {privateConversations.length > 0 && (

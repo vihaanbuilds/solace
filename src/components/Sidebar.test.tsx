@@ -224,6 +224,83 @@ describe('Sidebar', () => {
     });
   });
 
+  describe('search', () => {
+    const withMessages: Conversation[] = [
+      { id: 'a', title: 'First chat', createdAt: 100, messages: [] },
+      {
+        id: 'b',
+        title: 'Second chat',
+        createdAt: 200,
+        messages: [
+          { id: 'm1', sender: 'user', text: 'talking about my dog Biscuit', timestamp: 1 },
+        ],
+      },
+    ];
+
+    it('shows a logo and brand name at the top of the sidebar', () => {
+      renderSidebar();
+      expect(screen.getByText('Solace')).toBeInTheDocument();
+    });
+
+    it('opens a search input when "Search chats" is clicked, focused and empty', async () => {
+      const user = userEvent.setup();
+      renderSidebar();
+      await user.click(screen.getByText('🔍 Search chats'));
+      expect(screen.getByLabelText('Search chats')).toHaveFocus();
+    });
+
+    it('filters the list by title as you type', async () => {
+      const user = userEvent.setup();
+      renderSidebar();
+      await user.click(screen.getByText('🔍 Search chats'));
+      await user.type(screen.getByLabelText('Search chats'), 'second');
+
+      expect(screen.getByText('Second chat')).toBeInTheDocument();
+      expect(screen.queryByText('First chat')).not.toBeInTheDocument();
+    });
+
+    it('also matches on message content, not just the title', async () => {
+      const user = userEvent.setup();
+      renderSidebar({ conversations: withMessages });
+      await user.click(screen.getByText('🔍 Search chats'));
+      await user.type(screen.getByLabelText('Search chats'), 'biscuit');
+
+      expect(screen.getByText('Second chat')).toBeInTheDocument();
+      expect(screen.queryByText('First chat')).not.toBeInTheDocument();
+    });
+
+    it('shows a no-results message when nothing matches', async () => {
+      const user = userEvent.setup();
+      renderSidebar();
+      await user.click(screen.getByText('🔍 Search chats'));
+      await user.type(screen.getByLabelText('Search chats'), 'nonexistent');
+
+      expect(screen.getByText(/no chats match/i)).toBeInTheDocument();
+    });
+
+    it('clears the query and closes when the close button is clicked', async () => {
+      const user = userEvent.setup();
+      renderSidebar();
+      await user.click(screen.getByText('🔍 Search chats'));
+      await user.type(screen.getByLabelText('Search chats'), 'second');
+      await user.click(screen.getByLabelText('Close search'));
+
+      expect(screen.queryByLabelText('Search chats')).not.toBeInTheDocument();
+      expect(screen.getByText('First chat')).toBeInTheDocument();
+      expect(screen.getByText('Second chat')).toBeInTheDocument();
+    });
+
+    it('clears and closes on Escape', async () => {
+      const user = userEvent.setup();
+      renderSidebar();
+      await user.click(screen.getByText('🔍 Search chats'));
+      await user.type(screen.getByLabelText('Search chats'), 'second{Escape}');
+
+      expect(screen.queryByLabelText('Search chats')).not.toBeInTheDocument();
+      expect(screen.getByText('First chat')).toBeInTheDocument();
+    });
+  });
+
   describe('collapsed', () => {
     it('hides the conversation list and new-chat button when collapsed', () => {
       renderSidebar({ collapsed: true });
