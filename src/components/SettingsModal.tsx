@@ -9,21 +9,34 @@ import {
 } from '../lib/googleAuth';
 import {
   EngineStatus,
+  ModelTier,
+  MODEL_TIERS,
+  getActiveTier,
   getEngineStatus,
+  getRecommendedTier,
   isWebGPUSupported,
   loadEngine,
+  switchTier,
   subscribeToEngineStatus,
 } from '../lib/ai/webllmEngine';
-import { loadAiOptIn, saveAiOptIn } from '../lib/storage';
+import { loadAiOptIn, saveAiOptIn, saveAiTier } from '../lib/storage';
 
-function describeAiStatus(optIn: boolean | null, status: EngineStatus): string {
+const TIER_ORDER: ModelTier[] = ['small', 'medium', 'large'];
+
+function describeAiStatus(
+  optIn: boolean | null,
+  status: EngineStatus,
+  activeTier: ModelTier | null
+): string {
   if (!isWebGPUSupported()) {
     return "Not supported on this device — you'll always get quick pre-written responses.";
   }
-  if (status === 'ready') return 'Active — running locally on your device.';
+  if (status === 'ready' && activeTier) {
+    return `Active — running the ${MODEL_TIERS[activeTier].label.toLowerCase()} model locally on your device.`;
+  }
   if (status === 'loading') return 'Downloading — this usually takes 1–3 minutes.';
-  if (optIn) return "Enabled — it'll download (~1.7GB) the next time it's needed.";
-  return 'Off. A one-time ~1.7GB download, works offline afterward.';
+  if (optIn) return 'Enabled — pick a size below.';
+  return 'Off. Pick a size below to turn it on — everything runs on your device either way.';
 }
 
 interface SettingsModalProps {
@@ -60,10 +73,16 @@ export function SettingsModal({
 
   useEffect(() => subscribeToEngineStatus((status) => setEngineStatus(status)), []);
 
-  function handleEnableAi() {
+  function handleSelectTier(tier: ModelTier) {
     saveAiOptIn(true);
+    saveAiTier(tier);
     setAiOptIn(true);
-    if (getEngineStatus() === 'idle') loadEngine();
+    const current = getEngineStatus();
+    if (current === 'idle' || current === 'unsupported' || current === 'error') {
+      loadEngine(tier);
+    } else if (current === 'ready' && getActiveTier() !== tier) {
+      switchTier(tier);
+    }
   }
 
   useEffect(() => {
@@ -104,21 +123,31 @@ export function SettingsModal({
 
             <div className="settings-section">
               <p className="settings-section-label">AI model</p>
-              <div className="settings-row">
-                <div>
-                  <p className="settings-row-title">On-device AI</p>
-                  <p className="settings-row-desc">{describeAiStatus(aiOptIn, engineStatus)}</p>
-                </div>
-                {!(aiOptIn && engineStatus !== 'idle') && (
+              <p className="settings-row-title">On-device AI</p>
+              <p className="settings-row-desc settings-ai-desc">
+                {describeAiStatus(aiOptIn, engineStatus, getActiveTier())}
+              </p>
+              <div className="ai-tier-picker" role="radiogroup" aria-label="AI model size">
+                {TIER_ORDER.map((tier) => (
                   <button
-                    className="settings-secondary-btn"
-                    disabled={!isWebGPUSupported()}
-                    onClick={handleEnableAi}
+                    key={tier}
+                    role="radio"
+                    aria-checked={getActiveTier() === tier}
+                    disabled={!isWebGPUSupported() || engineStatus === 'loading'}
+                    className={`ai-tier-pill ${getActiveTier() === tier ? 'ai-tier-pill-active' : ''}`}
+                    onClick={() => handleSelectTier(tier)}
                   >
-                    Enable
+                    <span className="ai-tier-pill-label">{MODEL_TIERS[tier].label}</span>
+                    <span className="ai-tier-pill-size">~{MODEL_TIERS[tier].approxSizeGB}GB</span>
                   </button>
-                )}
+                ))}
               </div>
+              {!getActiveTier() && (
+                <p className="settings-row-desc">
+                  Recommended for this device: {MODEL_TIERS[getRecommendedTier()].label}. Pick a
+                  bigger one if you don't mind using more data.
+                </p>
+              )}
             </div>
 
             <div className="settings-section">

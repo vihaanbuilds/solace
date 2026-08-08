@@ -4,17 +4,25 @@ import {
   getEngineStatus,
   loadEngine,
   isWebGPUSupported,
+  getRecommendedTier,
+  MODEL_TIERS,
   EngineStatus,
+  ModelTier,
 } from '../lib/ai/webllmEngine';
-import { loadAiOptIn, saveAiOptIn } from '../lib/storage';
+import { loadAiOptIn, saveAiOptIn, loadAiTier, saveAiTier } from '../lib/storage';
+
+const TIER_ORDER: ModelTier[] = ['small', 'medium', 'large'];
 
 export function AiLoadingBanner() {
   const [status, setStatus] = useState<EngineStatus>(() => getEngineStatus());
   const [optIn, setOptIn] = useState<boolean | null>(() => loadAiOptIn());
+  const [selectedTier, setSelectedTier] = useState<ModelTier>(
+    () => loadAiTier() ?? getRecommendedTier()
+  );
 
   useEffect(() => {
     if (optIn === true && status === 'idle') {
-      loadEngine();
+      loadEngine(loadAiTier() ?? getRecommendedTier());
     }
   }, [optIn, status]);
 
@@ -22,6 +30,7 @@ export function AiLoadingBanner() {
 
   function handleEnable() {
     saveAiOptIn(true);
+    saveAiTier(selectedTier);
     setOptIn(true);
   }
 
@@ -31,13 +40,35 @@ export function AiLoadingBanner() {
   }
 
   if (optIn === null && isWebGPUSupported()) {
+    const recommended = getRecommendedTier();
+
     return (
       <div className="ai-loading-banner ai-opt-in-banner glass" role="status">
         <p>
           Solace can run a smarter AI entirely on your device instead of quick pre-written
-          replies — it's a one-time ~1.7GB download and works offline afterward. Your
-          messages never leave your device either way, and you can turn this on or off
+          replies — it works offline afterward, and your messages never leave your device
+          either way. Pick how much data you're comfortable using; you can change this
           anytime in Settings.
+        </p>
+        <div className="ai-tier-picker" role="radiogroup" aria-label="AI model size">
+          {TIER_ORDER.map((tier) => (
+            <button
+              key={tier}
+              role="radio"
+              aria-checked={selectedTier === tier}
+              className={`ai-tier-pill ${selectedTier === tier ? 'ai-tier-pill-active' : ''}`}
+              onClick={() => setSelectedTier(tier)}
+            >
+              <span className="ai-tier-pill-label">{MODEL_TIERS[tier].label}</span>
+              <span className="ai-tier-pill-size">~{MODEL_TIERS[tier].approxSizeGB}GB</span>
+            </button>
+          ))}
+        </div>
+        <p className="ai-tier-description">
+          {MODEL_TIERS[selectedTier].description}
+          {selectedTier !== recommended &&
+            TIER_ORDER.indexOf(selectedTier) > TIER_ORDER.indexOf(recommended) &&
+            " This is bigger than what we'd normally suggest for your device — it should still work, just expect a longer download."}
         </p>
         <div className="ai-opt-in-actions">
           <button onClick={handleEnable}>Enable on-device AI</button>

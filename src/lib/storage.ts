@@ -25,6 +25,8 @@ export interface UserProfile {
   dateOfBirth: string;
 }
 
+export type ModelTier = 'small' | 'medium' | 'large';
+
 const CONVERSATIONS_KEY = 'solace.conversations';
 const ACTIVE_CONVERSATION_KEY = 'solace.activeConversationId';
 const LEGACY_MESSAGES_KEY = 'solace.messages';
@@ -34,6 +36,7 @@ const SIDEBAR_COLLAPSED_KEY = 'solace.sidebarCollapsed';
 const PRIVATE_PASSCODE_KEY = 'solace.privatePasscode';
 const USER_PROFILE_KEY = 'solace.userProfile';
 const AI_OPT_IN_KEY = 'solace.aiOptIn';
+const AI_TIER_KEY = 'solace.aiTier';
 
 export function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -180,6 +183,15 @@ export function loadAiOptIn(): boolean | null {
   const raw = localStorage.getItem(AI_OPT_IN_KEY);
   if (raw === null) return null;
   return raw === 'true';
+}
+
+export function saveAiTier(tier: ModelTier): void {
+  localStorage.setItem(AI_TIER_KEY, tier);
+}
+
+export function loadAiTier(): ModelTier | null {
+  const raw = localStorage.getItem(AI_TIER_KEY);
+  return raw === 'small' || raw === 'medium' || raw === 'large' ? raw : null;
 }
 
 // Full local reset for the "delete account" settings action — sweeps every

@@ -696,6 +696,62 @@ body {
   border: 1px solid var(--glass-border) !important;
 }
 
+.ai-tier-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0.6rem 0;
+}
+
+.ai-tier-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  border-radius: 0.9rem;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.ai-tier-pill:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.ai-tier-pill:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.ai-tier-pill-active {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-2));
+  border-color: transparent;
+}
+
+.ai-tier-pill-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ai-tier-pill-size {
+  font-size: 0.72rem;
+  color: var(--color-text-soft);
+}
+
+.ai-tier-description {
+  margin: 0.4rem 0 0.75rem;
+  font-size: 0.8rem;
+  color: var(--color-text-soft);
+  line-height: 1.4;
+}
+
+.settings-ai-desc {
+  margin-bottom: 0 !important;
+}
+
 .app-layout {
   display: flex;
   min-height: 100vh;

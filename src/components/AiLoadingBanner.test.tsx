@@ -34,14 +34,14 @@ describe('AiLoadingBanner', () => {
 
     it('asks for consent instead of downloading automatically', () => {
       render(<AiLoadingBanner />);
-      expect(screen.getByText(/one-time ~1.7GB download/i)).toBeInTheDocument();
+      expect(screen.getByText('Enable on-device AI')).toBeInTheDocument();
       expect(webllmEngine.loadEngine).not.toHaveBeenCalled();
     });
 
     it('does not ask on a device without WebGPU support', () => {
       vi.mocked(webllmEngine.isWebGPUSupported).mockReturnValue(false);
       render(<AiLoadingBanner />);
-      expect(screen.queryByText(/one-time ~1.7GB download/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('Enable on-device AI')).not.toBeInTheDocument();
     });
 
     it('starts the download and remembers the choice when enabled', async () => {
@@ -55,6 +55,23 @@ describe('AiLoadingBanner', () => {
       expect(webllmEngine.loadEngine).toHaveBeenCalled();
     });
 
+    it('offers a size picker and remembers the picked tier when enabled', async () => {
+      const user = userEvent.setup();
+      let storedTier: webllmEngine.ModelTier | null = null;
+      const saveTierSpy = vi
+        .spyOn(storage, 'saveAiTier')
+        .mockImplementation((tier) => (storedTier = tier));
+      vi.spyOn(storage, 'loadAiTier').mockImplementation(() => storedTier);
+      render(<AiLoadingBanner />);
+
+      expect(screen.getByRole('radiogroup', { name: /ai model size/i })).toBeInTheDocument();
+      await user.click(screen.getByRole('radio', { name: /lighter/i }));
+      await user.click(screen.getByText('Enable on-device AI'));
+
+      expect(saveTierSpy).toHaveBeenCalledWith('small');
+      expect(webllmEngine.loadEngine).toHaveBeenCalledWith('small');
+    });
+
     it('remembers a decline and never downloads', async () => {
       const user = userEvent.setup();
       const saveSpy = vi.spyOn(storage, 'saveAiOptIn').mockImplementation(() => {});
@@ -64,7 +81,7 @@ describe('AiLoadingBanner', () => {
 
       expect(saveSpy).toHaveBeenCalledWith(false);
       expect(webllmEngine.loadEngine).not.toHaveBeenCalled();
-      expect(screen.queryByText(/one-time ~1.7GB download/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('Enable on-device AI')).not.toBeInTheDocument();
     });
   });
 
@@ -75,7 +92,7 @@ describe('AiLoadingBanner', () => {
 
     it('starts loading automatically without asking again', () => {
       render(<AiLoadingBanner />);
-      expect(screen.queryByText(/one-time ~1.7GB download/i)).not.toBeInTheDocument();
+      expect(screen.queryByText('Enable on-device AI')).not.toBeInTheDocument();
       expect(webllmEngine.loadEngine).toHaveBeenCalled();
     });
 
