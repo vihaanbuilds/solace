@@ -13,6 +13,7 @@ const SCRIPT_SRC = 'https://accounts.google.com/gsi/client';
 const PROFILE_KEY = 'solace.googleProfile';
 
 let scriptLoadPromise: Promise<void> | null = null;
+let initializedClientId: string | null = null;
 
 function loadGisScript(): Promise<void> {
   if (window.google?.accounts?.id) return Promise.resolve();
@@ -60,19 +61,26 @@ export async function renderGoogleSignInButton(
 
   await loadGisScript();
 
-  window.google!.accounts.id.initialize({
-    client_id: clientId,
-    callback: (response) => {
-      const payload = decodeJwtPayload(response.credential);
-      const profile: GoogleProfile = {
-        name: String(payload.name ?? ''),
-        email: String(payload.email ?? ''),
-        picture: String(payload.picture ?? ''),
-      };
-      saveGoogleProfile(profile);
-      onSignIn(profile);
-    },
-  });
+  // Guard against React StrictMode's dev-only double-invoke (or any other
+  // re-render) calling initialize() more than once for the same client —
+  // GIS logs a warning and only keeps the last call anyway, so skipping
+  // repeats is strictly safer, not just quieter.
+  if (initializedClientId !== clientId) {
+    window.google!.accounts.id.initialize({
+      client_id: clientId,
+      callback: (response) => {
+        const payload = decodeJwtPayload(response.credential);
+        const profile: GoogleProfile = {
+          name: String(payload.name ?? ''),
+          email: String(payload.email ?? ''),
+          picture: String(payload.picture ?? ''),
+        };
+        saveGoogleProfile(profile);
+        onSignIn(profile);
+      },
+    });
+    initializedClientId = clientId;
+  }
 
   window.google!.accounts.id.renderButton(container, {
     type: 'standard',
