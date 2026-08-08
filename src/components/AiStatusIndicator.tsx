@@ -50,5 +50,13 @@ export function AiStatusIndicator() {
     );
   }
 
+  if (status === 'error') {
+    return (
+      <div className="ai-status-pill ai-status-error glass" role="status" title={statusText || undefined}>
+        AI load failed
+      </div>
+    );
+  }
+
   return null;
 }

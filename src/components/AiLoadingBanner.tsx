@@ -29,7 +29,12 @@ export function AiLoadingBanner() {
   const [selectedTier, setSelectedTier] = useState<ModelTier>(() => toLocalTier(loadAiTier()));
 
   useEffect(() => {
-    if (optIn === true && status === 'idle') {
+    // Also re-runs whenever status settles back to 'idle' — including right
+    // after cancelLoad() clears a stuck local attempt because the user
+    // switched to Canopy. Without the loadAiTier() check, that would
+    // immediately kick off a brand-new local download the user never asked
+    // for, right after they picked the cloud model to avoid exactly that.
+    if (optIn === true && status === 'idle' && loadAiTier() !== 'cloud') {
       loadEngine(toLocalTier(loadAiTier()));
     }
   }, [optIn, status]);
@@ -97,6 +102,17 @@ export function AiLoadingBanner() {
           In a hurry? Pick {CLOUD_MODEL_INFO.name} from the model menu next to the message box
           instead — no download, works instantly, but sends messages to a server to reply.
         </p>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div className="ai-loading-banner ai-error-banner glass" role="alert">
+        <p>{statusText || "That didn't finish loading."}</p>
+        <div className="ai-opt-in-actions">
+          <button onClick={() => loadEngine(selectedTier)}>Try again</button>
+        </div>
       </div>
     );
   }

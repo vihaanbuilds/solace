@@ -60,6 +60,11 @@ const TIER_REINFORCEMENT: Partial<Record<ModelTier, string>> = {
 // base instructions alone don't reliably override that habit.
 const CLOUD_FORMATTING_INSTRUCTIONS = `\n\nThis reply is shown in a plain chat bubble with no markdown rendering and no citations list. Write in flowing, plain conversational sentences only — never use bold or italic markup, bullet points, numbered lists, headers, or citation markers like [1] or [2]. If you'd normally offer a few options, weave them naturally into a sentence instead of listing them.`;
 
+// Unlike the small/medium tiers (which need help staying on-script), this
+// model has real headroom — so push it to actually use that capacity for
+// depth and precision rather than just matching the baseline.
+const CLOUD_DEPTH_INSTRUCTIONS = `\n\nYou're running on the most capable model here, so use that capability for depth, not just polish. Notice the specific details they've actually shared — not a generic version of the emotion — and pick up on things they mentioned earlier in the conversation, weaving them back in naturally instead of treating each message in isolation. Notice what's implied but unsaid, not just the literal words. Two people describing the same emotion are describing two different situations — respond to theirs specifically, not a template of it. Being precisely, genuinely understood should be the thing they notice most about talking to you. Don't let this depth turn into problem-solving — stay with how they feel for longer than feels efficient, and resist offering advice, scripts, or solutions unless they've clearly asked for that. And never let an offer to help ("I can help you with X if you want") substitute for the actual question this reply ends on — the rule above about always ending on a genuine, specific question still applies to you exactly as written, every single reply, with no exceptions.`;
+
 export function buildSystemPrompt(
   mode: Mode,
   age?: number | null,
@@ -67,6 +72,6 @@ export function buildSystemPrompt(
   isCloud?: boolean
 ): string {
   const reinforcement = tier ? TIER_REINFORCEMENT[tier] ?? '' : '';
-  const formatting = isCloud ? CLOUD_FORMATTING_INSTRUCTIONS : '';
-  return `${SHARED_INSTRUCTIONS}\n\n${MODE_PERSONAS[mode]}${buildAgeGuidance(age)}${reinforcement}${formatting}`;
+  const cloudAdditions = isCloud ? `${CLOUD_FORMATTING_INSTRUCTIONS}${CLOUD_DEPTH_INSTRUCTIONS}` : '';
+  return `${SHARED_INSTRUCTIONS}\n\n${MODE_PERSONAS[mode]}${buildAgeGuidance(age)}${reinforcement}${cloudAdditions}`;
 }

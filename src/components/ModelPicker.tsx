@@ -4,11 +4,11 @@ import {
   MODEL_TIERS,
   ModelTier as LocalTier,
   EngineStatus,
+  cancelLoad,
   getActiveTier,
   getEngineStatus,
   isWebGPUSupported,
   loadEngine,
-  switchTier,
   subscribeToEngineStatus,
 } from '../lib/ai/webllmEngine';
 import { CLOUD_MODEL_INFO } from '../lib/ai/cloudEngine';
@@ -64,19 +64,24 @@ export function ModelPicker() {
     setOpen(false);
     saveAiTier(choice);
     setSelected(choice);
-    if (choice === 'cloud') return;
-    saveAiOptIn(true);
-    const current = getEngineStatus();
-    if (current === 'idle' || current === 'unsupported' || current === 'error') {
-      loadEngine(choice);
-    } else if (current === 'ready' && getActiveTier() !== choice) {
-      switchTier(choice);
+
+    if (choice === 'cloud') {
+      // Cancel any in-flight/stuck local download so its "loading" state
+      // can't keep showing after the user has already moved on to Canopy.
+      cancelLoad();
+      return;
     }
+
+    saveAiOptIn(true);
+    if (getEngineStatus() === 'ready' && getActiveTier() === choice) return;
+    cancelLoad();
+    loadEngine(choice);
   }
 
   const triggerLabel = (() => {
     if (selected === 'cloud') return CLOUD_MODEL_INFO.name;
     if (status === 'loading') return 'Loading…';
+    if (status === 'error') return 'Load failed';
     if (selected) return MODEL_TIERS[selected].name;
     return 'Enable AI';
   })();

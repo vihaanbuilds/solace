@@ -11,12 +11,13 @@ import {
   EngineStatus,
   ModelTier as LocalTier,
   MODEL_TIERS,
+  cancelLoad,
   getActiveTier,
   getEngineStatus,
+  getEngineStatusText,
   getRecommendedTier,
   isWebGPUSupported,
   loadEngine,
-  switchTier,
   subscribeToEngineStatus,
 } from '../lib/ai/webllmEngine';
 import { CLOUD_MODEL_INFO } from '../lib/ai/cloudEngine';
@@ -39,7 +40,10 @@ function describeAiStatus(
   if (status === 'ready' && activeTier) {
     return `Active — running ${MODEL_TIERS[activeTier].name} ${MODEL_TIERS[activeTier].version} locally on your device.`;
   }
-  if (status === 'loading') return 'Downloading — this usually takes 1–3 minutes.';
+  if (status === 'loading') return getEngineStatusText() || 'Downloading — this usually takes 1–3 minutes.';
+  if (status === 'error') {
+    return getEngineStatusText() || "That didn't finish loading. Try again, or pick Canopy for an instant reply instead.";
+  }
   if (optIn) return 'Enabled — pick a size below.';
   return 'Off. Pick a size below to turn it on — everything runs on your device either way.';
 }
@@ -82,15 +86,19 @@ export function SettingsModal({
   function handleSelectTier(tier: Choice) {
     saveAiTier(tier);
     setSelectedTier(tier);
-    if (tier === 'cloud') return;
+
+    if (tier === 'cloud') {
+      // Cancel any in-flight/stuck local download so its "loading" state
+      // can't keep showing after switching to Canopy.
+      cancelLoad();
+      return;
+    }
+
     saveAiOptIn(true);
     setAiOptIn(true);
-    const current = getEngineStatus();
-    if (current === 'idle' || current === 'unsupported' || current === 'error') {
-      loadEngine(tier);
-    } else if (current === 'ready' && getActiveTier() !== tier) {
-      switchTier(tier);
-    }
+    if (getEngineStatus() === 'ready' && getActiveTier() === tier) return;
+    cancelLoad();
+    loadEngine(tier);
   }
 
   useEffect(() => {
@@ -131,7 +139,6 @@ export function SettingsModal({
 
             <div className="settings-section">
               <p className="settings-section-label">AI model</p>
-              <p className="settings-row-title">AI model</p>
               <p className="settings-row-desc settings-ai-desc">
                 {describeAiStatus(selectedTier, aiOptIn, engineStatus, getActiveTier())}
               </p>
@@ -141,7 +148,7 @@ export function SettingsModal({
                     key={tier}
                     role="radio"
                     aria-checked={selectedTier === tier}
-                    disabled={!isWebGPUSupported() || engineStatus === 'loading'}
+                    disabled={!isWebGPUSupported()}
                     className={`ai-tier-pill ${selectedTier === tier ? 'ai-tier-pill-active' : ''}`}
                     onClick={() => handleSelectTier(tier)}
                   >

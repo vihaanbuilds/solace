@@ -53,9 +53,17 @@ export interface ChatMessage {
 
 type StatusListener = (status: EngineStatus, progress: number, statusText: string) => void;
 
+const STALL_TIMEOUT_MS = 60000;
+
 let engine: MLCEngine | null = null;
 let status: EngineStatus = 'idle';
 let progress = 0;
+// Bumped on every loadEngine/cancelLoad call so a late-arriving resolution
+// or progress event from an abandoned attempt (e.g. the user switched to
+// Canopy mid-download) can recognize it's stale and ignore itself instead
+// of clobbering whatever's happened since.
+let loadGeneration = 0;
+let stallTimer: ReturnType<typeof setTimeout> | undefined;
 // WebLLM's own progress text (e.g. "Fetching param cache[52/219]: 340MB
 // fetched, 41 secs elapsed") is far more informative than a bare percentage
 // — surfacing it instead of discarding it is a real, free improvement to
@@ -120,6 +128,18 @@ export function getRecommendedTier(): ModelTier {
   return isLikelyMobile() ? 'medium' : 'large';
 }
 
+function armStallTimer(generation: number): void {
+  window.clearTimeout(stallTimer);
+  stallTimer = window.setTimeout(() => {
+    if (loadGeneration !== generation) return;
+    setStatus(
+      'error',
+      0,
+      "This stalled without finishing — try a lighter model, or switch to Canopy in the model menu for an instant reply instead."
+    );
+  }, STALL_TIMEOUT_MS);
+}
+
 export function loadEngine(tier: ModelTier = getRecommendedTier()): void {
   if (status === 'loading' || status === 'ready') return;
 
@@ -128,32 +148,52 @@ export function loadEngine(tier: ModelTier = getRecommendedTier()): void {
     return;
   }
 
+  const generation = ++loadGeneration;
   activeTier = tier;
-  setStatus('loading', 0);
+  setStatus('loading', 0, '');
+  armStallTimer(generation);
 
   import('@mlc-ai/web-llm')
     .then(({ CreateMLCEngine }) =>
       CreateMLCEngine(MODEL_TIERS[tier].modelId, {
         initProgressCallback: (report: InitProgressReport) => {
+          if (loadGeneration !== generation) return;
+          armStallTimer(generation);
           setStatus('loading', report.progress, report.text);
         },
       })
     )
     .then((created) => {
+      if (loadGeneration !== generation) return;
+      window.clearTimeout(stallTimer);
       engine = created;
-      setStatus('ready', 1);
+      setStatus('ready', 1, '');
     })
     .catch(() => {
-      setStatus('error');
+      if (loadGeneration !== generation) return;
+      window.clearTimeout(stallTimer);
+      setStatus('error', 0, '');
     });
 }
 
-// Lets Settings offer a bigger (or smaller) tier after one is already
-// loaded — CreateMLCEngine has no in-place "resize", so this just resets
-// local state and starts a fresh load with the new tier's model.
-export function switchTier(tier: ModelTier): void {
+// Invalidates any in-flight load (its promise chain checks loadGeneration
+// and no-ops itself once stale) and drops back to idle — used whenever the
+// user switches to a different model while one is already loading, so a
+// stuck or abandoned attempt can't keep the UI stranded in "loading"
+// forever after they've moved on to something else.
+export function cancelLoad(): void {
+  loadGeneration++;
+  window.clearTimeout(stallTimer);
   engine = null;
-  status = 'idle';
+  activeTier = null;
+  setStatus('idle', 0, '');
+}
+
+// Lets Settings/the model picker offer a different tier after one is
+// already loaded or mid-load — CreateMLCEngine has no in-place "resize",
+// so this just cancels whatever's in flight and starts fresh.
+export function switchTier(tier: ModelTier): void {
+  cancelLoad();
   loadEngine(tier);
 }
 

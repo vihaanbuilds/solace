@@ -30,6 +30,11 @@ export interface ConversationTurn {
 }
 
 const MAX_HISTORY_MESSAGES = 12;
+// The cloud model has real headroom for a bigger context window than a
+// locally-run 1-3B model does, and remembering more of the conversation is
+// exactly what lets it weave earlier details back in naturally instead of
+// treating each message in isolation.
+const MAX_HISTORY_MESSAGES_CLOUD = 24;
 
 function pickRandom(options: string[]): string {
   return options[Math.floor(Math.random() * options.length)];
@@ -62,17 +67,17 @@ export async function getResponse(
     };
   }
 
-  const recentHistory = history.slice(-MAX_HISTORY_MESSAGES);
-  const historyMessages: ChatMessage[] = recentHistory.map(
-    (turn): ChatMessage => ({ role: turn.role, content: turn.content })
-  );
   const selectedTier = loadAiTier();
+
+  function toChatMessages(maxHistory: number): ChatMessage[] {
+    return history.slice(-maxHistory).map((turn) => ({ role: turn.role, content: turn.content }));
+  }
 
   if (selectedTier === 'cloud') {
     try {
       const messages: ChatMessage[] = [
         { role: 'system', content: buildSystemPrompt(mode, age, null, true) },
-        ...historyMessages,
+        ...toChatMessages(MAX_HISTORY_MESSAGES_CLOUD),
         { role: 'user', content: message },
       ];
       const text = await generateCloudReply(messages, onToken);
@@ -86,7 +91,7 @@ export async function getResponse(
     try {
       const messages: ChatMessage[] = [
         { role: 'system', content: buildSystemPrompt(mode, age, getActiveTier()) },
-        ...historyMessages,
+        ...toChatMessages(MAX_HISTORY_MESSAGES),
         { role: 'user', content: message },
       ];
       const text = await generateReply(messages, onToken);
