@@ -3,9 +3,10 @@ import { StoredMessage } from '../lib/storage';
 interface MessageBubbleProps {
   message: StoredMessage;
   pending?: boolean;
+  images?: string[];
 }
 
-export function MessageBubble({ message, pending = false }: MessageBubbleProps) {
+export function MessageBubble({ message, pending = false, images }: MessageBubbleProps) {
   const isBot = message.sender === 'bot';
   return (
     <div className={`message-row ${isBot ? 'message-row-bot' : 'message-row-user'}`}>
@@ -15,6 +16,13 @@ export function MessageBubble({ message, pending = false }: MessageBubbleProps) 
         }`}
       >
         {isBot && <div className="rainbow-glow" aria-hidden="true" />}
+        {images && images.length > 0 && (
+          <div className="message-bubble-images">
+            {images.map((src, i) => (
+              <img key={i} src={src} alt="" className="message-bubble-image" />
+            ))}
+          </div>
+        )}
         {pending && message.text === '' ? 'Solace is thinking…' : message.text}
       </div>
     </div>

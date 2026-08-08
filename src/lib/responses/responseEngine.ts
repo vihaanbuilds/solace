@@ -13,9 +13,9 @@ import {
   Mode,
 } from './templates';
 import { buildSystemPrompt } from '../ai/systemPrompt';
-import { getActiveTier, getEngineStatus, generateReply, ChatMessage } from '../ai/webllmEngine';
+import { getEngineStatus, generateReply, ChatMessage } from '../ai/webllmEngine';
 import { generateCloudReply } from '../ai/cloudEngine';
-import { loadAiTier } from '../storage';
+import { loadAiTier, loadBloomLocalMode, ChatTier } from '../storage';
 
 export interface BotReply {
   text: string;
@@ -29,12 +29,12 @@ export interface ConversationTurn {
   content: string;
 }
 
+const DEFAULT_TIER: ChatTier = 'bud';
 const MAX_HISTORY_MESSAGES = 12;
-// The cloud model has real headroom for a bigger context window than a
-// locally-run 1-3B model does, and remembering more of the conversation is
-// exactly what lets it weave earlier details back in naturally instead of
-// treating each message in isolation.
-const MAX_HISTORY_MESSAGES_CLOUD = 24;
+// Bloom and Canopy are the deepest-thinking tiers, and remembering more of
+// the conversation is exactly what lets them weave earlier details back in
+// naturally instead of treating each message in isolation.
+const MAX_HISTORY_MESSAGES_DEEP = 24;
 
 function pickRandom(options: string[]): string {
   return options[Math.floor(Math.random() * options.length)];
@@ -53,7 +53,8 @@ export async function getResponse(
   mode: Mode,
   history: ConversationTurn[] = [],
   onToken?: (partial: string) => void,
-  age?: number | null
+  age?: number | null,
+  images: string[] = []
 ): Promise<BotReply> {
   const crisis = isCrisis(message);
   const detection = detectEmotion(message);
@@ -67,31 +68,22 @@ export async function getResponse(
     };
   }
 
-  const selectedTier = loadAiTier();
+  const tier = loadAiTier() ?? DEFAULT_TIER;
+  // Every tier is cloud-backed by default — Bloom is the sole exception,
+  // and only once the user has explicitly flipped its local-mode toggle on
+  // and the on-device engine has actually finished loading.
+  const useLocal = tier === 'bloom' && loadBloomLocalMode() && getEngineStatus() === 'ready';
+  const maxHistory = tier === 'bloom' || tier === 'canopy' ? MAX_HISTORY_MESSAGES_DEEP : MAX_HISTORY_MESSAGES;
 
-  function toChatMessages(maxHistory: number): ChatMessage[] {
+  function toChatMessages(): ChatMessage[] {
     return history.slice(-maxHistory).map((turn) => ({ role: turn.role, content: turn.content }));
   }
 
-  if (selectedTier === 'cloud') {
+  if (useLocal) {
     try {
       const messages: ChatMessage[] = [
-        { role: 'system', content: buildSystemPrompt(mode, age, null, true) },
-        ...toChatMessages(MAX_HISTORY_MESSAGES_CLOUD),
-        { role: 'user', content: message },
-      ];
-      const text = await generateCloudReply(messages, onToken);
-      if (text) {
-        return { text, isCrisis: false, detection, source: 'ai' };
-      }
-    } catch {
-      // Fall through to the deterministic fallback on any cloud failure.
-    }
-  } else if (getEngineStatus() === 'ready') {
-    try {
-      const messages: ChatMessage[] = [
-        { role: 'system', content: buildSystemPrompt(mode, age, getActiveTier()) },
-        ...toChatMessages(MAX_HISTORY_MESSAGES),
+        { role: 'system', content: buildSystemPrompt(mode, age, tier, true) },
+        ...toChatMessages(),
         { role: 'user', content: message },
       ];
       const text = await generateReply(messages, onToken);
@@ -100,6 +92,22 @@ export async function getResponse(
       }
     } catch {
       // Fall through to the deterministic fallback on any AI failure.
+    }
+  } else {
+    try {
+      const messages: ChatMessage[] = [
+        { role: 'system', content: buildSystemPrompt(mode, age, tier, false) },
+        ...toChatMessages(),
+        { role: 'user', content: message },
+      ];
+      // Only Canopy supports images — dropped for every other tier even if
+      // somehow passed in, since their prompts never mention images at all.
+      const text = await generateCloudReply(messages, tier, tier === 'canopy' ? images : [], onToken);
+      if (text) {
+        return { text, isCrisis: false, detection, source: 'ai' };
+      }
+    } catch {
+      // Fall through to the deterministic fallback on any cloud failure.
     }
   }
 

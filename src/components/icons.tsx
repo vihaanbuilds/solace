@@ -289,6 +289,16 @@ export function LogOutIcon(props: IconProps) {
   );
 }
 
+export function ImageIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <rect x="3.5" y="4.5" width="17" height="15" rx="1.8" />
+      <circle cx="8.5" cy="9.5" r="1.6" />
+      <path d="M4 16.5l5-5 4 4 3-3 4 4" />
+    </svg>
+  );
+}
+
 export function QuoteIcon(props: IconProps) {
   return (
     <svg {...base(props)} fill="currentColor" stroke="none">

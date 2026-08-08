@@ -9,8 +9,15 @@ import {
   OFF_TOPIC_RESPONSES,
 } from './templates';
 import * as webllmEngine from '../ai/webllmEngine';
+import * as cloudEngine from '../ai/cloudEngine';
+import * as storage from '../storage';
 
-describe('getResponse (fallback path, AI engine not ready)', () => {
+describe('getResponse (fallback path, cloud AI unavailable)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.spyOn(cloudEngine, 'generateCloudReply').mockRejectedValue(new Error('network error'));
+  });
+
   it('returns a grief comforter template for grief-indicating text', async () => {
     const reply = await getResponse('My grandma passed away and I miss them so much', 'comforter');
     expect(reply.isCrisis).toBe(false);
@@ -61,29 +68,32 @@ describe('getResponse (fallback path, AI engine not ready)', () => {
   });
 });
 
-describe('getResponse (AI engine ready)', () => {
+describe('getResponse (cloud AI available — default tier)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('uses the AI engine for a non-crisis message and returns its generated text', async () => {
-    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('ready');
-    vi.spyOn(webllmEngine, 'generateReply').mockResolvedValue('A freshly generated, non-templated reply.');
+  it('uses the cloud engine by default and returns its generated text', async () => {
+    const generateCloudSpy = vi
+      .spyOn(cloudEngine, 'generateCloudReply')
+      .mockResolvedValue('A freshly generated, non-templated reply.');
 
     const reply = await getResponse('I feel really jealous of my friends', 'comforter');
 
     expect(reply.source).toBe('ai');
     expect(reply.isCrisis).toBe(false);
     expect(reply.text).toBe('A freshly generated, non-templated reply.');
+    expect(generateCloudSpy).toHaveBeenCalled();
   });
 
   it('streams tokens via the onToken callback', async () => {
-    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('ready');
-    vi.spyOn(webllmEngine, 'generateReply').mockImplementation(async (_messages, onToken) => {
-      onToken?.('Partial');
-      onToken?.('Partial reply');
-      return 'Partial reply';
-    });
+    vi.spyOn(cloudEngine, 'generateCloudReply').mockImplementation(
+      async (_messages, _tier, _images, onToken) => {
+        onToken?.('Partial');
+        onToken?.('Partial reply');
+        return 'Partial reply';
+      }
+    );
 
     const tokens: string[] = [];
     await getResponse('I feel happy today', 'uplifter', [], (partial) => tokens.push(partial));
@@ -92,9 +102,8 @@ describe('getResponse (AI engine ready)', () => {
   });
 
   it('passes recent conversation history to the AI as context', async () => {
-    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('ready');
-    const generateReplySpy = vi
-      .spyOn(webllmEngine, 'generateReply')
+    const generateCloudSpy = vi
+      .spyOn(cloudEngine, 'generateCloudReply')
       .mockResolvedValue('A reply.');
 
     await getResponse('I feel sad today', 'comforter', [
@@ -102,7 +111,7 @@ describe('getResponse (AI engine ready)', () => {
       { role: 'assistant', content: 'earlier reply' },
     ]);
 
-    const messagesArg = generateReplySpy.mock.calls[0][0];
+    const messagesArg = generateCloudSpy.mock.calls[0][0];
     expect(messagesArg[0].role).toBe('system');
     expect(messagesArg).toContainEqual({ role: 'user', content: 'earlier message' });
     expect(messagesArg).toContainEqual({ role: 'assistant', content: 'earlier reply' });
@@ -113,25 +122,108 @@ describe('getResponse (AI engine ready)', () => {
   });
 
   it('crisis check takes priority over the AI engine and never calls it', async () => {
-    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('ready');
-    const generateReplySpy = vi.spyOn(webllmEngine, 'generateReply');
+    const generateCloudSpy = vi.spyOn(cloudEngine, 'generateCloudReply');
 
     const reply = await getResponse('I want to die', 'comforter');
 
     expect(reply.isCrisis).toBe(true);
     expect(reply.source).toBe('fallback');
     expect(CRISIS_RESPONSES.comforter).toContain(reply.text);
-    expect(generateReplySpy).not.toHaveBeenCalled();
+    expect(generateCloudSpy).not.toHaveBeenCalled();
   });
 
-  it('falls back gracefully to the deterministic system if the AI call throws', async () => {
-    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('ready');
-    vi.spyOn(webllmEngine, 'generateReply').mockRejectedValue(new Error('engine crashed'));
+  it('falls back gracefully to the deterministic system if the cloud call throws', async () => {
+    vi.spyOn(cloudEngine, 'generateCloudReply').mockRejectedValue(new Error('cloud failure'));
 
     const reply = await getResponse('I feel really jealous of my friends', 'comforter');
 
     expect(reply.source).toBe('fallback');
     expect(reply.isCrisis).toBe(false);
     expect(RESPONSE_TEMPLATES.jealousy.comforter).toContain(reply.text);
+  });
+
+  it('drops images for every tier except canopy', async () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('bud');
+    const generateCloudSpy = vi
+      .spyOn(cloudEngine, 'generateCloudReply')
+      .mockResolvedValue('A reply.');
+
+    await getResponse('hello', 'comforter', [], undefined, null, ['data:image/jpeg;base64,abc']);
+
+    expect(generateCloudSpy.mock.calls[0][2]).toEqual([]);
+  });
+
+  it('passes images through for canopy', async () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('canopy');
+    const generateCloudSpy = vi
+      .spyOn(cloudEngine, 'generateCloudReply')
+      .mockResolvedValue('A reply.');
+    const images = ['data:image/jpeg;base64,abc'];
+
+    await getResponse('hello', 'comforter', [], undefined, null, images);
+
+    expect(generateCloudSpy.mock.calls[0][2]).toEqual(images);
+  });
+});
+
+describe('getResponse (Bloom local mode)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('bloom');
+    vi.spyOn(storage, 'loadBloomLocalMode').mockReturnValue(true);
+  });
+
+  it('uses the local engine once it is ready', async () => {
+    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('ready');
+    const generateReplySpy = vi
+      .spyOn(webllmEngine, 'generateReply')
+      .mockResolvedValue('A local reply.');
+    const generateCloudSpy = vi.spyOn(cloudEngine, 'generateCloudReply');
+
+    const reply = await getResponse('I feel really jealous of my friends', 'comforter');
+
+    expect(reply.source).toBe('ai');
+    expect(reply.text).toBe('A local reply.');
+    expect(generateReplySpy).toHaveBeenCalled();
+    expect(generateCloudSpy).not.toHaveBeenCalled();
+  });
+
+  it('falls back to cloud Bloom while the local engine is still loading', async () => {
+    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('loading');
+    const generateReplySpy = vi.spyOn(webllmEngine, 'generateReply');
+    const generateCloudSpy = vi
+      .spyOn(cloudEngine, 'generateCloudReply')
+      .mockResolvedValue('Cloud Bloom reply.');
+
+    const reply = await getResponse('I feel really jealous of my friends', 'comforter');
+
+    expect(reply.text).toBe('Cloud Bloom reply.');
+    expect(generateReplySpy).not.toHaveBeenCalled();
+    expect(generateCloudSpy).toHaveBeenCalled();
+  });
+
+  it('falls back to cloud Bloom if the local engine errored', async () => {
+    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('error');
+    const generateCloudSpy = vi
+      .spyOn(cloudEngine, 'generateCloudReply')
+      .mockResolvedValue('Cloud Bloom reply.');
+
+    const reply = await getResponse('I feel really jealous of my friends', 'comforter');
+
+    expect(reply.text).toBe('Cloud Bloom reply.');
+    expect(generateCloudSpy).toHaveBeenCalled();
+  });
+
+  it('crisis check still takes priority and calls neither engine', async () => {
+    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('ready');
+    const generateReplySpy = vi.spyOn(webllmEngine, 'generateReply');
+    const generateCloudSpy = vi.spyOn(cloudEngine, 'generateCloudReply');
+
+    const reply = await getResponse('I want to die', 'comforter');
+
+    expect(reply.isCrisis).toBe(true);
+    expect(reply.source).toBe('fallback');
+    expect(generateReplySpy).not.toHaveBeenCalled();
+    expect(generateCloudSpy).not.toHaveBeenCalled();
   });
 });

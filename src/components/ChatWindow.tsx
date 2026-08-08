@@ -6,16 +6,20 @@ import { AiLoadingBanner } from './AiLoadingBanner';
 import { ModelPicker } from './ModelPicker';
 import { CursiveReveal } from './CursiveReveal';
 import { TypewriterGreeting } from './TypewriterGreeting';
+import { ImageIcon, CloseIcon } from './icons';
 import { getResponse, ConversationTurn } from '../lib/responses/responseEngine';
 import { Mode } from '../lib/responses/templates';
+import { processImageFile, MAX_IMAGES } from '../lib/ai/imageUpload';
 import {
   StoredMessage,
+  ChatTier,
   createId,
   loadMode,
   saveMode,
   loadUserProfile,
   getFirstName,
   calculateAge,
+  loadAiTier,
 } from '../lib/storage';
 
 interface ChatWindowProps {
@@ -28,6 +32,16 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
   const [input, setInput] = useState('');
   const [pendingBotText, setPendingBotText] = useState<string | null>(null);
   const [userProfile] = useState(() => loadUserProfile());
+  const [tier, setTier] = useState<ChatTier>(() => loadAiTier() ?? 'bud');
+  const [pendingImages, setPendingImages] = useState<string[]>([]);
+  const [imageError, setImageError] = useState<string | null>(null);
+  // Images are shown for the current session only, keyed by message id —
+  // they're deliberately not written into StoredMessage/localStorage, since
+  // even resized photos could quickly eat through the origin's storage
+  // quota and break chat persistence entirely for every conversation, not
+  // just the ones with images.
+  const [sessionImages, setSessionImages] = useState<Record<string, string[]>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const age = userProfile ? calculateAge(userProfile.dateOfBirth) : null;
   const firstName = userProfile ? getFirstName(userProfile.fullName) : null;
@@ -43,17 +57,43 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
   const lastBotMessage = [...messages].reverse().find((m) => m.sender === 'bot');
   const showCrisisBanner = lastBotMessage?.isCrisis === true;
 
+  async function handleFilesSelected(fileList: FileList | null) {
+    if (!fileList || fileList.length === 0) return;
+    const remaining = MAX_IMAGES - pendingImages.length;
+    const files = Array.from(fileList).slice(0, remaining);
+    setImageError(null);
+
+    for (const file of files) {
+      try {
+        const dataUrl = await processImageFile(file);
+        setPendingImages((prev) => (prev.length >= MAX_IMAGES ? prev : [...prev, dataUrl]));
+      } catch (err) {
+        setImageError(err instanceof Error ? err.message : 'Could not process that image.');
+      }
+    }
+  }
+
+  function removePendingImage(index: number) {
+    setPendingImages((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleSend() {
     const text = input.trim();
-    if (!text || pendingBotText !== null) return;
+    const images = pendingImages;
+    if ((!text && images.length === 0) || pendingBotText !== null) return;
     setInput('');
+    setPendingImages([]);
+    setImageError(null);
 
     const userMessage: StoredMessage = {
       id: createId(),
       sender: 'user',
-      text,
+      text: text || 'Shared an image',
       timestamp: Date.now(),
     };
+    if (images.length > 0) {
+      setSessionImages((prev) => ({ ...prev, [userMessage.id]: images }));
+    }
     const messagesWithUser = [...messages, userMessage];
     onMessagesChange(messagesWithUser);
 
@@ -71,7 +111,8 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
       (partial) => {
         setPendingBotText(partial);
       },
-      age
+      age,
+      images
     );
 
     const botMessage: StoredMessage = {
@@ -105,7 +146,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
           </div>
         )}
         {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} />
+          <MessageBubble key={m.id} message={m} images={sessionImages[m.id]} />
         ))}
         {pendingBotText !== null && (
           <MessageBubble
@@ -115,7 +156,45 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
         )}
         <div ref={endRef} />
       </div>
+      {tier === 'canopy' && pendingImages.length > 0 && (
+        <div className="chat-image-preview-row">
+          {pendingImages.map((src, i) => (
+            <div key={i} className="chat-image-preview">
+              <img src={src} alt="" />
+              <button type="button" onClick={() => removePendingImage(i)} aria-label="Remove image">
+                <CloseIcon />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+      {tier === 'canopy' && imageError && <p className="chat-image-error">{imageError}</p>}
       <div className="chat-input-row glass">
+        {tier === 'canopy' && (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+              onChange={(e) => {
+                handleFilesSelected(e.target.files);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              className="chat-attach-btn"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={pendingImages.length >= MAX_IMAGES || pendingBotText !== null}
+              aria-label="Attach an image"
+              title={`Attach up to ${MAX_IMAGES} images`}
+            >
+              <ImageIcon />
+            </button>
+          </>
+        )}
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -124,7 +203,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
           aria-label="Message input"
           disabled={pendingBotText !== null}
         />
-        <ModelPicker />
+        <ModelPicker onTierChange={setTier} />
         <button onClick={handleSend} disabled={pendingBotText !== null}>
           Send
         </button>

@@ -1,5 +1,5 @@
 import { Mode } from '../responses/templates';
-import type { ModelTier } from './webllmEngine';
+import type { ChatTier } from '../storage';
 
 // Grounded in the same handful of therapeutic principles as the fallback
 // engine (see templates.ts) — Rogers' unconditional positive regard and
@@ -44,34 +44,36 @@ function buildAgeGuidance(age: number | null | undefined): string {
   return `\n\nThe person you're talking to is ${age} years old. Naturally tailor your language, examples, and level of formality to someone that age — casual and relatable for a teenager, a little more mature in tone for a young adult — without ever mentioning their age or sounding condescending.`;
 }
 
-// Smaller models drift off these rules more easily than the largest tier,
-// so they get extra, more literal reinforcement to close the quality gap —
-// same underlying instructions, just spelled out more directly for a model
-// with less room to infer nuance on its own.
-const TIER_REINFORCEMENT: Partial<Record<ModelTier, string>> = {
-  small: `\n\nLean on simple, direct sentences over clever or indirect phrasing. Focus on one feeling at a time instead of covering a lot at once. Hold tightly to the rules above, especially always ending on a genuine question — when in doubt, keep it short, warm, and concrete rather than improvising something elaborate.`,
-  medium: `\n\nFavor clear, concrete phrasing over anything too clever or roundabout, and stay disciplined about the rules above, especially always ending on a genuine question.`,
-};
-
-// The cloud model is search-tuned by default and keeps reaching for bold
-// text, bullet lists, and citation brackets like [1][2] even when asked not
-// to — none of which render as anything but literal punctuation in a plain
-// chat bubble. This has to be stated explicitly and forcefully, since the
-// base instructions alone don't reliably override that habit.
+// Applies to every cloud reply — the search-tuned base model keeps reaching
+// for bold text, bullet lists, and citation brackets like [1][2] even when
+// asked not to, none of which render as anything but literal punctuation in
+// a plain chat bubble. Bloom's local mode skips this since it isn't cloud.
 const CLOUD_FORMATTING_INSTRUCTIONS = `\n\nThis reply is shown in a plain chat bubble with no markdown rendering and no citations list. Write in flowing, plain conversational sentences only — never use bold or italic markup, bullet points, numbered lists, headers, or citation markers like [1] or [2]. If you'd normally offer a few options, weave them naturally into a sentence instead of listing them.`;
 
-// Unlike the small/medium tiers (which need help staying on-script), this
-// model has real headroom — so push it to actually use that capacity for
-// depth and precision rather than just matching the baseline.
-const CLOUD_DEPTH_INSTRUCTIONS = `\n\nYou're running on the most capable model here, so use that capability for depth, not just polish. Notice the specific details they've actually shared — not a generic version of the emotion — and pick up on things they mentioned earlier in the conversation, weaving them back in naturally instead of treating each message in isolation. Notice what's implied but unsaid, not just the literal words. Two people describing the same emotion are describing two different situations — respond to theirs specifically, not a template of it. Being precisely, genuinely understood should be the thing they notice most about talking to you. Don't let this depth turn into problem-solving — stay with how they feel for longer than feels efficient, and resist offering advice, scripts, or solutions unless they've clearly asked for that. And never let an offer to help ("I can help you with X if you want") substitute for the actual question this reply ends on — the rule above about always ending on a genuine, specific question still applies to you exactly as written, every single reply, with no exceptions.`;
+const SPROUT_PACE_INSTRUCTIONS = `\n\nYou're the fastest option here, so prioritize responding quickly with a short, warm reaction over a fully developed one. One or two sentences plus the closing question is often enough — still validate what they said first, just don't elaborate as much as you might otherwise.`;
+
+const BUD_PACE_INSTRUCTIONS = `\n\nYou're the standard, balanced option here — steady, clear pacing, giving enough space to genuinely understand what they're saying without stretching every reply out.`;
+
+// Shared by Bloom and Canopy — both are the "deepest thinking" tier, they
+// just differ in whether images are supported.
+const DEEP_INSTRUCTIONS = `\n\nYou're the deepest-thinking option here, so use that space for real depth, not just polish. Notice the specific details they've actually shared — not a generic version of the emotion — and pick up on things they mentioned earlier in the conversation, weaving them back in naturally instead of treating each message in isolation. Notice what's implied but unsaid, not just the literal words. Two people describing the same emotion are describing two different situations — respond to theirs specifically, not a template of it. Don't let this depth turn into problem-solving — stay with how they feel for longer than feels efficient, and resist offering advice, scripts, or solutions unless they've clearly asked for that. And never let an offer to help ("I can help you with X if you want") replace the actual question this reply ends on — always close on a genuine, specific question, exactly as the rules above require, with no exceptions. Being precisely, genuinely understood should be the thing they notice most about talking to you.`;
+
+const CANOPY_IMAGE_INSTRUCTIONS = `\n\nIf they've shared an image, actually look at and respond to what's specifically in it — a real photo, drawing, screenshot, whatever it is — instead of a generic "thanks for sharing" acknowledgment. Only comment on it if it's relevant to how they're feeling; don't force a connection that isn't there.`;
+
+const TIER_PACE: Record<ChatTier, string> = {
+  sprout: SPROUT_PACE_INSTRUCTIONS,
+  bud: BUD_PACE_INSTRUCTIONS,
+  bloom: DEEP_INSTRUCTIONS,
+  canopy: `${DEEP_INSTRUCTIONS}${CANOPY_IMAGE_INSTRUCTIONS}`,
+};
 
 export function buildSystemPrompt(
   mode: Mode,
   age?: number | null,
-  tier?: ModelTier | null,
-  isCloud?: boolean
+  tier?: ChatTier | null,
+  isLocal?: boolean
 ): string {
-  const reinforcement = tier ? TIER_REINFORCEMENT[tier] ?? '' : '';
-  const cloudAdditions = isCloud ? `${CLOUD_FORMATTING_INSTRUCTIONS}${CLOUD_DEPTH_INSTRUCTIONS}` : '';
-  return `${SHARED_INSTRUCTIONS}\n\n${MODE_PERSONAS[mode]}${buildAgeGuidance(age)}${reinforcement}${cloudAdditions}`;
+  const pace = tier ? TIER_PACE[tier] : '';
+  const cloudAdditions = isLocal ? '' : CLOUD_FORMATTING_INSTRUCTIONS;
+  return `${SHARED_INSTRUCTIONS}\n\n${MODE_PERSONAS[mode]}${buildAgeGuidance(age)}${pace}${cloudAdditions}`;
 }

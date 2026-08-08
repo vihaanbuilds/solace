@@ -25,7 +25,10 @@ export interface UserProfile {
   dateOfBirth: string;
 }
 
-export type ModelTier = 'small' | 'medium' | 'large' | 'cloud';
+// All four are cloud-backed (Sonar) by default, differentiated only by
+// pacing/depth of the system prompt. Bloom is the sole exception: it can
+// optionally run fully on-device instead, gated by bloomLocalMode below.
+export type ChatTier = 'sprout' | 'bud' | 'bloom' | 'canopy';
 
 const CONVERSATIONS_KEY = 'solace.conversations';
 const ACTIVE_CONVERSATION_KEY = 'solace.activeConversationId';
@@ -35,8 +38,8 @@ const THEME_KEY = 'solace.theme';
 const SIDEBAR_COLLAPSED_KEY = 'solace.sidebarCollapsed';
 const PRIVATE_PASSCODE_KEY = 'solace.privatePasscode';
 const USER_PROFILE_KEY = 'solace.userProfile';
-const AI_OPT_IN_KEY = 'solace.aiOptIn';
 const AI_TIER_KEY = 'solace.aiTier';
+const BLOOM_LOCAL_MODE_KEY = 'solace.bloomLocalMode';
 
 export function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -174,24 +177,24 @@ export function calculateAge(dateOfBirth: string): number | null {
   return age >= 0 ? age : null;
 }
 
-// null means "hasn't decided yet" (show the ask); true/false is a saved choice.
-export function saveAiOptIn(optedIn: boolean): void {
-  localStorage.setItem(AI_OPT_IN_KEY, String(optedIn));
-}
-
-export function loadAiOptIn(): boolean | null {
-  const raw = localStorage.getItem(AI_OPT_IN_KEY);
-  if (raw === null) return null;
-  return raw === 'true';
-}
-
-export function saveAiTier(tier: ModelTier): void {
+export function saveAiTier(tier: ChatTier): void {
   localStorage.setItem(AI_TIER_KEY, tier);
 }
 
-export function loadAiTier(): ModelTier | null {
+export function loadAiTier(): ChatTier | null {
   const raw = localStorage.getItem(AI_TIER_KEY);
-  return raw === 'small' || raw === 'medium' || raw === 'large' || raw === 'cloud' ? raw : null;
+  return raw === 'sprout' || raw === 'bud' || raw === 'bloom' || raw === 'canopy' ? raw : null;
+}
+
+// Flipping this toggle on IS the consent to download — the warning lives
+// right next to the toggle in the UI, so there's no separate opt-in step
+// to track the way the old mandatory-download gate needed one.
+export function saveBloomLocalMode(enabled: boolean): void {
+  localStorage.setItem(BLOOM_LOCAL_MODE_KEY, String(enabled));
+}
+
+export function loadBloomLocalMode(): boolean {
+  return localStorage.getItem(BLOOM_LOCAL_MODE_KEY) === 'true';
 }
 
 // Full local reset for the "delete account" settings action — sweeps every

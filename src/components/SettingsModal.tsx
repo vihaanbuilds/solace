@@ -9,43 +9,29 @@ import {
 } from '../lib/googleAuth';
 import {
   EngineStatus,
-  ModelTier as LocalTier,
-  MODEL_TIERS,
+  LOCAL_MODEL_APPROX_SIZE_GB,
   cancelLoad,
-  getActiveTier,
+  deviceSeemsUnderpowered,
   getEngineStatus,
   getEngineStatusText,
-  getRecommendedTier,
   isWebGPUSupported,
   loadEngine,
   subscribeToEngineStatus,
 } from '../lib/ai/webllmEngine';
-import { CLOUD_MODEL_INFO } from '../lib/ai/cloudEngine';
-import { ModelTier as Choice, loadAiOptIn, saveAiOptIn, saveAiTier, loadAiTier } from '../lib/storage';
+import { TIERS, TIER_ORDER } from '../lib/ai/tiers';
+import { ChatTier, loadBloomLocalMode, saveAiTier, saveBloomLocalMode, loadAiTier } from '../lib/storage';
 
-const TIER_ORDER: LocalTier[] = ['small', 'medium', 'large'];
-
-function describeAiStatus(
-  selected: Choice | null,
-  optIn: boolean | null,
-  status: EngineStatus,
-  activeTier: LocalTier | null
-): string {
-  if (selected === 'cloud') {
-    return `Active — using ${CLOUD_MODEL_INFO.name} ${CLOUD_MODEL_INFO.version}. Your messages are sent to a server to generate replies.`;
+function describeAiStatus(tier: ChatTier, status: EngineStatus, bloomLocal: boolean): string {
+  if (tier === 'bloom' && bloomLocal) {
+    if (status === 'ready') return 'Active — running Bloom locally on your device.';
+    if (status === 'loading') {
+      return getEngineStatusText() || "Downloading — this usually takes 1–3 minutes. You'll get Bloom's cloud replies until then.";
+    }
+    if (status === 'error') {
+      return getEngineStatusText() || "That didn't finish loading. Using Bloom's cloud replies instead — try again below, or turn local mode off.";
+    }
   }
-  if (!isWebGPUSupported()) {
-    return "On-device AI isn't supported here — you'll always get quick pre-written responses unless you pick Canopy below.";
-  }
-  if (status === 'ready' && activeTier) {
-    return `Active — running ${MODEL_TIERS[activeTier].name} ${MODEL_TIERS[activeTier].version} locally on your device.`;
-  }
-  if (status === 'loading') return getEngineStatusText() || 'Downloading — this usually takes 1–3 minutes.';
-  if (status === 'error') {
-    return getEngineStatusText() || "That didn't finish loading. Try again, or pick Canopy for an instant reply instead.";
-  }
-  if (optIn) return 'Enabled — pick a size below.';
-  return 'Off. Pick a size below to turn it on — everything runs on your device either way.';
+  return `Active — using ${TIERS[tier].name} ${TIERS[tier].version}. Your messages are sent to a server to generate replies.`;
 }
 
 interface SettingsModalProps {
@@ -69,9 +55,9 @@ export function SettingsModal({
 }: SettingsModalProps) {
   const [view, setView] = useState<View>('main');
   const googleBtnRef = useRef<HTMLDivElement>(null);
-  const [aiOptIn, setAiOptIn] = useState<boolean | null>(() => loadAiOptIn());
   const [engineStatus, setEngineStatus] = useState<EngineStatus>(() => getEngineStatus());
-  const [selectedTier, setSelectedTier] = useState<Choice | null>(() => loadAiTier());
+  const [selectedTier, setSelectedTier] = useState<ChatTier>(() => loadAiTier() ?? 'bud');
+  const [bloomLocal, setBloomLocal] = useState<boolean>(() => loadBloomLocalMode());
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -83,22 +69,21 @@ export function SettingsModal({
 
   useEffect(() => subscribeToEngineStatus((status) => setEngineStatus(status)), []);
 
-  function handleSelectTier(tier: Choice) {
+  // Switching tiers never touches the engine — only Bloom's local-mode
+  // toggle does, since every tier is cloud-backed by default now.
+  function handleSelectTier(tier: ChatTier) {
     saveAiTier(tier);
     setSelectedTier(tier);
+  }
 
-    if (tier === 'cloud') {
-      // Cancel any in-flight/stuck local download so its "loading" state
-      // can't keep showing after switching to Canopy.
+  function handleBloomLocalToggle(enabled: boolean) {
+    saveBloomLocalMode(enabled);
+    setBloomLocal(enabled);
+    if (enabled) {
+      loadEngine();
+    } else {
       cancelLoad();
-      return;
     }
-
-    saveAiOptIn(true);
-    setAiOptIn(true);
-    if (getEngineStatus() === 'ready' && getActiveTier() === tier) return;
-    cancelLoad();
-    loadEngine(tier);
   }
 
   useEffect(() => {
@@ -140,7 +125,7 @@ export function SettingsModal({
             <div className="settings-section">
               <p className="settings-section-label">AI model</p>
               <p className="settings-row-desc settings-ai-desc">
-                {describeAiStatus(selectedTier, aiOptIn, engineStatus, getActiveTier())}
+                {describeAiStatus(selectedTier, engineStatus, bloomLocal)}
               </p>
               <div className="ai-tier-picker" role="radiogroup" aria-label="AI model">
                 {TIER_ORDER.map((tier) => (
@@ -148,30 +133,41 @@ export function SettingsModal({
                     key={tier}
                     role="radio"
                     aria-checked={selectedTier === tier}
-                    disabled={!isWebGPUSupported()}
                     className={`ai-tier-pill ${selectedTier === tier ? 'ai-tier-pill-active' : ''}`}
                     onClick={() => handleSelectTier(tier)}
                   >
-                    <span className="ai-tier-pill-label">{MODEL_TIERS[tier].name}</span>
-                    <span className="ai-tier-pill-size">~{MODEL_TIERS[tier].approxSizeGB}GB</span>
+                    <span className="ai-tier-pill-label">{TIERS[tier].name}</span>
+                    <span className="ai-tier-pill-size">{TIERS[tier].tagline}</span>
                   </button>
                 ))}
-                <button
-                  role="radio"
-                  aria-checked={selectedTier === 'cloud'}
-                  className={`ai-tier-pill ${selectedTier === 'cloud' ? 'ai-tier-pill-active' : ''}`}
-                  onClick={() => handleSelectTier('cloud')}
-                >
-                  <span className="ai-tier-pill-label">{CLOUD_MODEL_INFO.name}</span>
-                  <span className="ai-tier-pill-size">Cloud</span>
-                </button>
               </div>
-              {!selectedTier && isWebGPUSupported() && (
-                <p className="settings-row-desc">
-                  Recommended for this device: {MODEL_TIERS[getRecommendedTier()].name}. Pick a
-                  bigger one if you don't mind using more data, or Canopy to use the cloud model
-                  instead.
-                </p>
+              {selectedTier === 'bloom' && (
+                <div className="model-picker-local-panel settings-local-panel">
+                  {isWebGPUSupported() ? (
+                    <>
+                      <label className="model-picker-toggle-row">
+                        <input
+                          type="checkbox"
+                          checked={bloomLocal}
+                          onChange={(e) => handleBloomLocalToggle(e.target.checked)}
+                        />
+                        Run fully on your device instead
+                      </label>
+                      <p className="model-picker-toggle-warning">
+                        Downloads about {LOCAL_MODEL_APPROX_SIZE_GB}GB and needs a genuinely
+                        powerful phone or computer — it may not work on every device
+                        {deviceSeemsUnderpowered() ? ', and this device might struggle with it' : ''}.
+                        Nothing you type leaves your device in this mode, and it works offline
+                        afterward.
+                      </p>
+                    </>
+                  ) : (
+                    <p className="model-picker-toggle-warning">
+                      Local mode isn't supported in this browser — Bloom uses the cloud model
+                      here instead.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 

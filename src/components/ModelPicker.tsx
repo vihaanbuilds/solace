@@ -1,33 +1,46 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  MODEL_TIERS,
-  ModelTier as LocalTier,
   EngineStatus,
+  LOCAL_MODEL_APPROX_SIZE_GB,
   cancelLoad,
-  getActiveTier,
+  deviceSeemsUnderpowered,
   getEngineStatus,
   isWebGPUSupported,
   loadEngine,
   subscribeToEngineStatus,
 } from '../lib/ai/webllmEngine';
-import { CLOUD_MODEL_INFO } from '../lib/ai/cloudEngine';
-import { saveAiOptIn, saveAiTier, loadAiTier } from '../lib/storage';
+import { TIERS, TIER_ORDER } from '../lib/ai/tiers';
+import { ChatTier, loadAiTier, loadBloomLocalMode, saveAiTier, saveBloomLocalMode } from '../lib/storage';
 import { ChevronDownIcon } from './icons';
 
-const MENU_WIDTH = 250;
-const LOCAL_TIER_ORDER: LocalTier[] = ['small', 'medium', 'large'];
-type Choice = LocalTier | 'cloud';
+const MENU_WIDTH = 270;
 
-export function ModelPicker() {
+interface ModelPickerProps {
+  onTierChange?: (tier: ChatTier) => void;
+}
+
+export function ModelPicker({ onTierChange }: ModelPickerProps = {}) {
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<EngineStatus>(() => getEngineStatus());
-  const [selected, setSelected] = useState<Choice | null>(() => loadAiTier());
+  const [selected, setSelected] = useState<ChatTier>(() => loadAiTier() ?? 'bud');
+  const [bloomLocal, setBloomLocal] = useState<boolean>(() => loadBloomLocalMode());
   const [menuPosition, setMenuPosition] = useState<{ bottom: number; left: number } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => subscribeToEngineStatus((next) => setStatus(next)), []);
+
+  // Resumes Bloom's local engine on mount if the user had left it on. Only
+  // depends on the tier/toggle the user explicitly set, never on `status`
+  // itself — that's deliberate, since a reactive dependency on status was
+  // exactly what previously caused a cancelled load to silently restart
+  // itself the moment it settled back to idle.
+  useEffect(() => {
+    if (selected === 'bloom' && bloomLocal && getEngineStatus() === 'idle') {
+      loadEngine();
+    }
+  }, [selected, bloomLocal]);
 
   useEffect(() => {
     if (!open) return;
@@ -60,30 +73,32 @@ export function ModelPicker() {
     setOpen((prev) => !prev);
   }
 
-  function handleSelect(choice: Choice) {
-    setOpen(false);
-    saveAiTier(choice);
-    setSelected(choice);
+  function handleSelect(tier: ChatTier) {
+    saveAiTier(tier);
+    setSelected(tier);
+    onTierChange?.(tier);
+    // Bloom stays open so its local-mode toggle is immediately visible and
+    // usable in the same interaction, instead of requiring a second click
+    // to reopen the menu.
+    if (tier !== 'bloom') setOpen(false);
+  }
 
-    if (choice === 'cloud') {
-      // Cancel any in-flight/stuck local download so its "loading" state
-      // can't keep showing after the user has already moved on to Canopy.
+  function handleBloomLocalToggle(enabled: boolean) {
+    saveBloomLocalMode(enabled);
+    setBloomLocal(enabled);
+    if (enabled) {
+      loadEngine();
+    } else {
       cancelLoad();
-      return;
     }
-
-    saveAiOptIn(true);
-    if (getEngineStatus() === 'ready' && getActiveTier() === choice) return;
-    cancelLoad();
-    loadEngine(choice);
   }
 
   const triggerLabel = (() => {
-    if (selected === 'cloud') return CLOUD_MODEL_INFO.name;
-    if (status === 'loading') return 'Loading…';
-    if (status === 'error') return 'Load failed';
-    if (selected) return MODEL_TIERS[selected].name;
-    return 'Enable AI';
+    if (selected === 'bloom' && bloomLocal) {
+      if (status === 'loading') return 'Loading…';
+      if (status === 'error') return 'Load failed';
+    }
+    return TIERS[selected].name;
   })();
 
   return (
@@ -109,10 +124,9 @@ export function ModelPicker() {
             aria-label="Choose AI model"
             style={{ bottom: menuPosition.bottom, left: menuPosition.left, width: MENU_WIDTH }}
           >
-            {isWebGPUSupported() &&
-              LOCAL_TIER_ORDER.map((tier) => (
+            {TIER_ORDER.map((tier) => (
+              <div key={tier}>
                 <button
-                  key={tier}
                   role="menuitemradio"
                   aria-checked={selected === tier}
                   className={`model-picker-item ${selected === tier ? 'model-picker-item-active' : ''}`}
@@ -120,30 +134,56 @@ export function ModelPicker() {
                 >
                   <div className="model-picker-item-head">
                     <span className="model-picker-item-name">
-                      {MODEL_TIERS[tier].name} {MODEL_TIERS[tier].version}
+                      {TIERS[tier].name} {TIERS[tier].version}
                     </span>
-                    <span className="model-picker-item-size">~{MODEL_TIERS[tier].approxSizeGB}GB</span>
                   </div>
-                  <span className="model-picker-item-tagline">{MODEL_TIERS[tier].tagline}</span>
+                  <span className="model-picker-item-tagline">{TIERS[tier].tagline}</span>
                 </button>
-              ))}
-            {isWebGPUSupported() && <div className="model-picker-divider" />}
-            <button
-              role="menuitemradio"
-              aria-checked={selected === 'cloud'}
-              className={`model-picker-item ${selected === 'cloud' ? 'model-picker-item-active' : ''}`}
-              onClick={() => handleSelect('cloud')}
-            >
-              <div className="model-picker-item-head">
-                <span className="model-picker-item-name">
-                  {CLOUD_MODEL_INFO.name} {CLOUD_MODEL_INFO.version}
-                </span>
-                <span className="model-picker-item-size">Cloud</span>
+                {tier === 'bloom' && selected === 'bloom' && (
+                  <div className="model-picker-local-panel">
+                    {isWebGPUSupported() ? (
+                      <>
+                        <label className="model-picker-toggle-row">
+                          <input
+                            type="checkbox"
+                            checked={bloomLocal}
+                            onChange={(e) => handleBloomLocalToggle(e.target.checked)}
+                          />
+                          Run fully on your device instead
+                        </label>
+                        <p className="model-picker-toggle-warning">
+                          Downloads about {LOCAL_MODEL_APPROX_SIZE_GB}GB and needs a genuinely
+                          powerful phone or computer — it may not work on every device
+                          {deviceSeemsUnderpowered() ? ', and this device might struggle with it' : ''}.
+                          Nothing you type leaves your device in this mode, and it works offline
+                          afterward.
+                        </p>
+                        {bloomLocal && status === 'loading' && (
+                          <p className="model-picker-toggle-status">
+                            Loading… this can take 1–3 minutes.
+                          </p>
+                        )}
+                        {bloomLocal && status === 'error' && (
+                          <p className="model-picker-toggle-status model-picker-toggle-error">
+                            Didn't finish loading.{' '}
+                            <button type="button" onClick={() => loadEngine()}>
+                              Try again
+                            </button>
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="model-picker-toggle-warning">
+                        Local mode isn't supported in this browser — Bloom uses the cloud model
+                        here instead.
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
-              <span className="model-picker-item-tagline">
-                {CLOUD_MODEL_INFO.tagline} — sends messages to a server
-              </span>
-            </button>
+            ))}
+            <div className="model-picker-divider" />
+            <p className="model-picker-note">Canopy lets you share up to 3 images per message.</p>
           </div>,
           document.body
         )}

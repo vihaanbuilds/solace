@@ -15,7 +15,14 @@ const DEFAULT_MODEL = 'sonar';
 interface CloudChatRequestBody {
   messages?: unknown;
   model?: string;
+  max_tokens?: unknown;
 }
+
+// Images are sent as base64 data URLs inside message content, which can get
+// large fast — this is an explicit, controlled failure instead of leaving
+// it to whatever the platform's own default limit happens to be.
+const MAX_BODY_BYTES = 8 * 1024 * 1024;
+const MAX_TOKENS_CEILING = 1000;
 
 export default async function handler(req: Request): Promise<Response> {
   if (req.method !== 'POST') {
@@ -34,9 +41,17 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
+  const rawBody = await req.text();
+  if (rawBody.length > MAX_BODY_BYTES) {
+    return new Response(JSON.stringify({ error: 'Request is too large.' }), {
+      status: 413,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+
   let body: CloudChatRequestBody;
   try {
-    body = await req.json();
+    body = JSON.parse(rawBody);
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid request body.' }), {
       status: 400,
@@ -53,6 +68,10 @@ export default async function handler(req: Request): Promise<Response> {
 
   const model =
     typeof body.model === 'string' && ALLOWED_MODELS.has(body.model) ? body.model : DEFAULT_MODEL;
+  const maxTokens =
+    typeof body.max_tokens === 'number' && body.max_tokens > 0 && body.max_tokens <= MAX_TOKENS_CEILING
+      ? body.max_tokens
+      : undefined;
 
   let upstream: Response;
   try {
@@ -66,6 +85,7 @@ export default async function handler(req: Request): Promise<Response> {
         model,
         messages: body.messages,
         stream: true,
+        ...(maxTokens ? { max_tokens: maxTokens } : {}),
       }),
     });
   } catch {

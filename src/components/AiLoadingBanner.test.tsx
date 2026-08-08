@@ -13,7 +13,7 @@ describe('AiLoadingBanner', () => {
   beforeEach(() => {
     listeners = [];
     vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('idle');
-    vi.spyOn(webllmEngine, 'isWebGPUSupported').mockReturnValue(true);
+    vi.spyOn(webllmEngine, 'getEngineStatusText').mockReturnValue('');
     vi.spyOn(webllmEngine, 'loadEngine').mockImplementation(() => {});
     vi.spyOn(webllmEngine, 'subscribeToEngineStatus').mockImplementation((listener: Listener) => {
       listeners.push(listener);
@@ -27,83 +27,40 @@ describe('AiLoadingBanner', () => {
     vi.restoreAllMocks();
   });
 
-  describe('before a decision has been made', () => {
-    beforeEach(() => {
-      vi.spyOn(storage, 'loadAiOptIn').mockReturnValue(null);
-    });
-
-    it('asks for consent instead of downloading automatically', () => {
-      render(<AiLoadingBanner />);
-      expect(screen.getByText('Enable on-device AI')).toBeInTheDocument();
-      expect(webllmEngine.loadEngine).not.toHaveBeenCalled();
-    });
-
-    it('does not ask on a device without WebGPU support', () => {
-      vi.mocked(webllmEngine.isWebGPUSupported).mockReturnValue(false);
-      render(<AiLoadingBanner />);
-      expect(screen.queryByText('Enable on-device AI')).not.toBeInTheDocument();
-    });
-
-    it('starts the download and remembers the choice when enabled', async () => {
-      const user = userEvent.setup();
-      const saveSpy = vi.spyOn(storage, 'saveAiOptIn').mockImplementation(() => {});
-      render(<AiLoadingBanner />);
-
-      await user.click(screen.getByText('Enable on-device AI'));
-
-      expect(saveSpy).toHaveBeenCalledWith(true);
-      expect(webllmEngine.loadEngine).toHaveBeenCalled();
-    });
-
-    it('offers a size picker and remembers the picked tier when enabled', async () => {
-      const user = userEvent.setup();
-      let storedTier: storage.ModelTier | null = null;
-      const saveTierSpy = vi
-        .spyOn(storage, 'saveAiTier')
-        .mockImplementation((tier) => (storedTier = tier));
-      vi.spyOn(storage, 'loadAiTier').mockImplementation(() => storedTier);
-      render(<AiLoadingBanner />);
-
-      expect(screen.getByRole('radiogroup', { name: /ai model size/i })).toBeInTheDocument();
-      await user.click(screen.getByRole('radio', { name: /sprout/i }));
-      await user.click(screen.getByText('Enable on-device AI'));
-
-      expect(saveTierSpy).toHaveBeenCalledWith('small');
-      expect(webllmEngine.loadEngine).toHaveBeenCalledWith('small');
-    });
-
-    it('remembers a decline and never downloads', async () => {
-      const user = userEvent.setup();
-      const saveSpy = vi.spyOn(storage, 'saveAiOptIn').mockImplementation(() => {});
-      render(<AiLoadingBanner />);
-
-      await user.click(screen.getByText('Not now'));
-
-      expect(saveSpy).toHaveBeenCalledWith(false);
-      expect(webllmEngine.loadEngine).not.toHaveBeenCalled();
-      expect(screen.queryByText('Enable on-device AI')).not.toBeInTheDocument();
-    });
+  it('renders nothing when Bloom local mode is off', () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('bloom');
+    vi.spyOn(storage, 'loadBloomLocalMode').mockReturnValue(false);
+    render(<AiLoadingBanner />);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  describe('once the user has already opted in', () => {
+  it('renders nothing for other tiers even if local mode was left on', () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('canopy');
+    vi.spyOn(storage, 'loadBloomLocalMode').mockReturnValue(true);
+    render(<AiLoadingBanner />);
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  describe('when Bloom local mode is on', () => {
     beforeEach(() => {
-      vi.spyOn(storage, 'loadAiOptIn').mockReturnValue(true);
+      vi.spyOn(storage, 'loadAiTier').mockReturnValue('bloom');
+      vi.spyOn(storage, 'loadBloomLocalMode').mockReturnValue(true);
     });
 
-    it('starts loading automatically without asking again', () => {
+    it('shows nothing while idle', () => {
       render(<AiLoadingBanner />);
-      expect(screen.queryByText('Enable on-device AI')).not.toBeInTheDocument();
-      expect(webllmEngine.loadEngine).toHaveBeenCalled();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
 
-    it('explains the download and the temporary fallback while loading', () => {
+    it('explains the download and the cloud fallback while loading', () => {
       render(<AiLoadingBanner />);
       act(() => {
         listeners.forEach((listener) => listener('loading', 0.2, ''));
       });
-      expect(screen.getByText(/downloading onto your device/i)).toBeInTheDocument();
+      expect(screen.getByText(/downloading to run fully on your device/i)).toBeInTheDocument();
       expect(screen.getByText(/1–3 minutes/)).toBeInTheDocument();
-      expect(screen.getByText(/quick pre-written responses/i)).toBeInTheDocument();
+      expect(screen.getByText(/regular cloud replies/i)).toBeInTheDocument();
     });
 
     it('disappears once the engine is ready', () => {
@@ -118,14 +75,26 @@ describe('AiLoadingBanner', () => {
       });
       expect(screen.queryByRole('status')).not.toBeInTheDocument();
     });
-  });
 
-  describe('once the user has already declined', () => {
-    it('renders nothing and never downloads', () => {
-      vi.spyOn(storage, 'loadAiOptIn').mockReturnValue(false);
+    it('shows an error state with a retry action on failure', async () => {
+      const user = userEvent.setup();
       render(<AiLoadingBanner />);
-      expect(screen.queryByRole('status')).not.toBeInTheDocument();
-      expect(webllmEngine.loadEngine).not.toHaveBeenCalled();
+      act(() => {
+        listeners.forEach((listener) => listener('error', 0, "That didn't finish loading."));
+      });
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByText(/regular cloud replies/i)).toBeInTheDocument();
+
+      await user.click(screen.getByText('Try again'));
+      expect(webllmEngine.loadEngine).toHaveBeenCalled();
+    });
+
+    it('shows a note when local mode is unsupported in this browser', () => {
+      render(<AiLoadingBanner />);
+      act(() => {
+        listeners.forEach((listener) => listener('unsupported', 0, ''));
+      });
+      expect(screen.getByText(/isn't supported in this browser/i)).toBeInTheDocument();
     });
   });
 });

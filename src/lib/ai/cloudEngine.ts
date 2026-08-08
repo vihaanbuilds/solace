@@ -1,13 +1,17 @@
 import type { ChatMessage } from './webllmEngine';
+import type { ChatTier } from '../storage';
 
 const CLOUD_ENDPOINT = '/api/cloud-chat';
 
-export const CLOUD_MODEL_INFO = {
-  name: 'Canopy',
-  version: 'v4.2.1',
-  tagline: 'Cloud-assisted, most capable',
-  description:
-    'Runs on a server instead of your device, so it can be more capable — but that means your messages leave your device to generate a reply, unlike every other option here.',
+// Generous backstops, not a tool for forcing brevity — pacing comes from the
+// system prompt (see systemPrompt.ts). These just cap runaway generation,
+// set high enough above each tier's expected reply length that a truncated
+// mid-sentence cutoff should never actually happen in practice.
+const MAX_TOKENS: Record<ChatTier, number> = {
+  sprout: 300,
+  bud: 500,
+  bloom: 800,
+  canopy: 800,
 };
 
 // The cloud model is search-tuned and keeps emitting citation markers like
@@ -24,17 +28,42 @@ function cleanCloudText(text: string): string {
     .trim();
 }
 
-// The cloud model runs on a real server, unlike WebLLM — this call sends
-// the conversation to /api/cloud-chat (and from there to the provider), so
-// it must only ever be used behind a clear, honest disclosure to the user.
+// Only the last (current) user message can carry images — history stays
+// plain text, matching what actually gets shown in the chat log.
+function toPayloadMessages(messages: ChatMessage[], images: string[]): unknown[] {
+  if (images.length === 0) return messages;
+
+  const lastUserIndex = messages.map((m) => m.role).lastIndexOf('user');
+  return messages.map((message, index) => {
+    if (index !== lastUserIndex) return message;
+    return {
+      role: message.role,
+      content: [
+        { type: 'text', text: message.content },
+        ...images.map((url) => ({ type: 'image_url', image_url: { url } })),
+      ],
+    };
+  });
+}
+
+// The cloud model runs on a real server, unlike Bloom's local mode — this
+// call sends the conversation to /api/cloud-chat (and from there to the
+// provider), so it must only ever be used behind a clear, honest disclosure
+// to the user.
 export async function generateCloudReply(
   messages: ChatMessage[],
+  tier: ChatTier,
+  images: string[] = [],
   onToken?: (partial: string) => void
 ): Promise<string> {
   const response = await fetch(CLOUD_ENDPOINT, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ messages, model: 'sonar' }),
+    body: JSON.stringify({
+      messages: toPayloadMessages(messages, images),
+      model: 'sonar',
+      max_tokens: MAX_TOKENS[tier],
+    }),
   });
 
   if (!response.ok || !response.body) {
