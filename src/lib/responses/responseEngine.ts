@@ -15,6 +15,13 @@ import {
 import { buildSystemPrompt } from '../ai/systemPrompt';
 import { getEngineStatus, generateReply, ChatMessage } from '../ai/webllmEngine';
 import { generateCloudReply } from '../ai/cloudEngine';
+import {
+  hasReachedDailyLimit,
+  markLimitNoticeShown,
+  recordCloudMessage,
+  shouldShowLimitNotice,
+} from '../ai/messageLimits';
+import { TIERS } from '../ai/tiers';
 import { loadAiTier, loadBloomLocalMode, ChatTier } from '../storage';
 
 export interface BotReply {
@@ -46,6 +53,17 @@ function getFallbackReply(message: string, mode: Mode, detection: DetectionResul
   if (isOffTopicQuestion(message)) return pickRandom(OFF_TOPIC_RESPONSES[mode]);
   if (!detection.topEmotion) return pickRandom(CLARIFYING_QUESTIONS);
   return pickRandom(RESPONSE_TEMPLATES[detection.topEmotion][mode]);
+}
+
+function getLimitReachedReply(tier: ChatTier): string {
+  const name = TIERS[tier].name;
+  const suggestion =
+    tier === 'sprout'
+      ? 'it resets tomorrow'
+      : tier === 'bloom'
+        ? `it resets tomorrow, you can switch to ${TIERS.sprout.name} for a more lenient limit, or turn on Bloom's on-device mode in the model menu for unlimited replies on your own device`
+        : `it resets tomorrow, or you can switch to ${TIERS.sprout.name} for a more lenient daily limit`;
+  return `You've reached today's message limit for ${name} — ${suggestion}. I'm still here for you with quick, ready-made support in the meantime — what's on your mind?`;
 }
 
 export async function getResponse(
@@ -93,6 +111,14 @@ export async function getResponse(
     } catch {
       // Fall through to the deterministic fallback on any AI failure.
     }
+  } else if (hasReachedDailyLimit(tier)) {
+    // Explain the cap exactly once when it's first hit — every attempt
+    // after that stays silent about it and just uses the normal
+    // deterministic fallback below, so the app doesn't repeat itself.
+    if (shouldShowLimitNotice(tier)) {
+      markLimitNoticeShown(tier);
+      return { text: getLimitReachedReply(tier), isCrisis: false, detection, source: 'fallback' };
+    }
   } else {
     try {
       const messages: ChatMessage[] = [
@@ -104,10 +130,12 @@ export async function getResponse(
       // somehow passed in, since their prompts never mention images at all.
       const text = await generateCloudReply(messages, tier, tier === 'canopy' ? images : [], onToken);
       if (text) {
+        recordCloudMessage(tier);
         return { text, isCrisis: false, detection, source: 'ai' };
       }
     } catch {
-      // Fall through to the deterministic fallback on any cloud failure.
+      // Fall through to the deterministic fallback on any cloud failure —
+      // a failed attempt doesn't cost part of the daily budget.
     }
   }
 

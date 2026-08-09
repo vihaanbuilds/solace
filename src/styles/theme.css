@@ -1422,6 +1422,15 @@ body {
 .model-picker-item-tagline {
   font-size: 0.75rem;
   color: var(--color-text-soft);
+  display: block;
+}
+
+.model-picker-item-remaining {
+  font-size: 0.68rem;
+  color: var(--color-text-soft);
+  opacity: 0.75;
+  display: block;
+  margin-top: 0.15rem;
 }
 
 .model-picker-divider {

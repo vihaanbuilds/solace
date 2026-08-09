@@ -19,11 +19,12 @@ import {
   subscribeToEngineStatus,
 } from '../lib/ai/webllmEngine';
 import { TIERS, TIER_ORDER } from '../lib/ai/tiers';
+import { getDailyLimit, getMessagesRemainingToday } from '../lib/ai/messageLimits';
 import { ChatTier, loadBloomLocalMode, saveAiTier, saveBloomLocalMode, loadAiTier } from '../lib/storage';
 
 function describeAiStatus(tier: ChatTier, status: EngineStatus, bloomLocal: boolean): string {
   if (tier === 'bloom' && bloomLocal) {
-    if (status === 'ready') return 'Active — running Bloom locally on your device.';
+    if (status === 'ready') return 'Active — running Bloom locally on your device. No daily limit in this mode.';
     if (status === 'loading') {
       return getEngineStatusText() || "Downloading — this usually takes 1–3 minutes. You'll get Bloom's cloud replies until then.";
     }
@@ -31,7 +32,9 @@ function describeAiStatus(tier: ChatTier, status: EngineStatus, bloomLocal: bool
       return getEngineStatusText() || "That didn't finish loading. Using Bloom's cloud replies instead — try again below, or turn local mode off.";
     }
   }
-  return `Active — using ${TIERS[tier].name} ${TIERS[tier].version}. Your messages are sent to a server to generate replies.`;
+  const remaining = getMessagesRemainingToday(tier);
+  const limit = getDailyLimit(tier);
+  return `Active — using ${TIERS[tier].name} ${TIERS[tier].version}. Your messages are sent to a server to generate replies. ${remaining} of ${limit} messages left today.`;
 }
 
 interface SettingsModalProps {

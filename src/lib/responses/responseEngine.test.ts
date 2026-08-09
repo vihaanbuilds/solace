@@ -10,11 +10,13 @@ import {
 } from './templates';
 import * as webllmEngine from '../ai/webllmEngine';
 import * as cloudEngine from '../ai/cloudEngine';
+import * as messageLimits from '../ai/messageLimits';
 import * as storage from '../storage';
 
 describe('getResponse (fallback path, cloud AI unavailable)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    localStorage.clear();
     vi.spyOn(cloudEngine, 'generateCloudReply').mockRejectedValue(new Error('network error'));
   });
 
@@ -71,6 +73,7 @@ describe('getResponse (fallback path, cloud AI unavailable)', () => {
 describe('getResponse (cloud AI available — default tier)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    localStorage.clear();
   });
 
   it('uses the cloud engine by default and returns its generated text', async () => {
@@ -169,6 +172,7 @@ describe('getResponse (cloud AI available — default tier)', () => {
 describe('getResponse (Bloom local mode)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    localStorage.clear();
     vi.spyOn(storage, 'loadAiTier').mockReturnValue('bloom');
     vi.spyOn(storage, 'loadBloomLocalMode').mockReturnValue(true);
   });
@@ -225,5 +229,89 @@ describe('getResponse (Bloom local mode)', () => {
     expect(reply.source).toBe('fallback');
     expect(generateReplySpy).not.toHaveBeenCalled();
     expect(generateCloudSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('getResponse (daily message limits)', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    localStorage.clear();
+  });
+
+  it('stops calling the cloud engine once the tier hits its daily cap, with an explanatory reply', async () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('canopy');
+    const generateCloudSpy = vi
+      .spyOn(cloudEngine, 'generateCloudReply')
+      .mockResolvedValue('A reply.');
+
+    const limit = messageLimits.getDailyLimit('canopy');
+    for (let i = 0; i < limit; i += 1) {
+      await getResponse('I feel really jealous of my friends', 'comforter');
+    }
+    expect(generateCloudSpy).toHaveBeenCalledTimes(limit);
+
+    const reply = await getResponse('I feel really jealous of my friends', 'comforter');
+
+    expect(reply.source).toBe('fallback');
+    expect(reply.text).toMatch(/today's message limit for canopy/i);
+    expect(generateCloudSpy).toHaveBeenCalledTimes(limit);
+  });
+
+  it('shows the limit-reached explanation once, then falls back silently after', async () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('sprout');
+    vi.spyOn(cloudEngine, 'generateCloudReply').mockResolvedValue('A reply.');
+
+    const limit = messageLimits.getDailyLimit('sprout');
+    for (let i = 0; i < limit; i += 1) {
+      await getResponse('I feel really jealous of my friends', 'comforter');
+    }
+
+    const first = await getResponse('I feel really jealous of my friends', 'comforter');
+    expect(first.text).toMatch(/today's message limit/i);
+
+    const second = await getResponse('I feel really jealous of my friends', 'comforter');
+    expect(second.text).not.toMatch(/today's message limit/i);
+    expect(RESPONSE_TEMPLATES.jealousy.comforter).toContain(second.text);
+  });
+
+  it('does not count a failed cloud call against the daily limit', async () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('bud');
+    vi.spyOn(cloudEngine, 'generateCloudReply').mockRejectedValue(new Error('network error'));
+
+    await getResponse('I feel really jealous of my friends', 'comforter');
+    await getResponse('I feel really jealous of my friends', 'comforter');
+
+    expect(messageLimits.getMessagesUsedToday('bud')).toBe(0);
+  });
+
+  it('never blocks a crisis message, even after the tier hits its daily cap', async () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('canopy');
+    vi.spyOn(cloudEngine, 'generateCloudReply').mockResolvedValue('A reply.');
+
+    const limit = messageLimits.getDailyLimit('canopy');
+    for (let i = 0; i < limit; i += 1) {
+      await getResponse('I feel really jealous of my friends', 'comforter');
+    }
+
+    const reply = await getResponse('I want to die', 'comforter');
+
+    expect(reply.isCrisis).toBe(true);
+    expect(CRISIS_RESPONSES.comforter).toContain(reply.text);
+  });
+
+  it('does not apply any daily limit to Bloom local mode', async () => {
+    vi.spyOn(storage, 'loadAiTier').mockReturnValue('bloom');
+    vi.spyOn(storage, 'loadBloomLocalMode').mockReturnValue(true);
+    vi.spyOn(webllmEngine, 'getEngineStatus').mockReturnValue('ready');
+    const generateReplySpy = vi
+      .spyOn(webllmEngine, 'generateReply')
+      .mockResolvedValue('A local reply.');
+
+    const limit = messageLimits.getDailyLimit('bloom');
+    for (let i = 0; i < limit + 3; i += 1) {
+      const reply = await getResponse('I feel really jealous of my friends', 'comforter');
+      expect(reply.source).toBe('ai');
+    }
+    expect(generateReplySpy).toHaveBeenCalledTimes(limit + 3);
   });
 });

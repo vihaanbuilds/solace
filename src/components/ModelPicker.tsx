@@ -11,10 +11,18 @@ import {
   subscribeToEngineStatus,
 } from '../lib/ai/webllmEngine';
 import { TIERS, TIER_ORDER } from '../lib/ai/tiers';
+import { getDailyLimit, getMessagesRemainingToday } from '../lib/ai/messageLimits';
 import { ChatTier, loadAiTier, loadBloomLocalMode, saveAiTier, saveBloomLocalMode } from '../lib/storage';
 import { ChevronDownIcon } from './icons';
 
 const MENU_WIDTH = 270;
+
+function remainingByTier(): Record<ChatTier, number> {
+  return Object.fromEntries(TIER_ORDER.map((t) => [t, getMessagesRemainingToday(t)])) as Record<
+    ChatTier,
+    number
+  >;
+}
 
 interface ModelPickerProps {
   onTierChange?: (tier: ChatTier) => void;
@@ -26,10 +34,18 @@ export function ModelPicker({ onTierChange }: ModelPickerProps = {}) {
   const [selected, setSelected] = useState<ChatTier>(() => loadAiTier() ?? 'bud');
   const [bloomLocal, setBloomLocal] = useState<boolean>(() => loadBloomLocalMode());
   const [menuPosition, setMenuPosition] = useState<{ bottom: number; left: number } | null>(null);
+  const [remaining, setRemaining] = useState<Record<ChatTier, number>>(() => remainingByTier());
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => subscribeToEngineStatus((next) => setStatus(next)), []);
+
+  // Refreshed on open rather than kept continuously live — usage only
+  // changes when a message is actually sent elsewhere in the app, so
+  // there's nothing to stay subscribed to between one open and the next.
+  useEffect(() => {
+    if (open) setRemaining(remainingByTier());
+  }, [open]);
 
   // Resumes Bloom's local engine on mount if the user had left it on. Only
   // depends on the tier/toggle the user explicitly set, never on `status`
@@ -138,6 +154,11 @@ export function ModelPicker({ onTierChange }: ModelPickerProps = {}) {
                     </span>
                   </div>
                   <span className="model-picker-item-tagline">{TIERS[tier].tagline}</span>
+                  <span className="model-picker-item-remaining">
+                    {tier === 'bloom' && bloomLocal
+                      ? "Unlimited — local mode doesn't use this"
+                      : `${remaining[tier]} of ${getDailyLimit(tier)} left today`}
+                  </span>
                 </button>
                 {tier === 'bloom' && selected === 'bloom' && (
                   <div className="model-picker-local-panel">
