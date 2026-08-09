@@ -28,18 +28,46 @@ function cleanCloudText(text: string): string {
     .trim();
 }
 
-// Only the last (current) user message can carry images — history stays
-// plain text, matching what actually gets shown in the chat log.
-function toPayloadMessages(messages: ChatMessage[], images: string[]): unknown[] {
-  if (images.length === 0) return messages;
+// A bare one-word (or near-enough) message like "whatever", "idk", or
+// "fine" reliably gets misread as a request to define/translate the word
+// itself rather than as the user's actual reply — confirmed directly
+// against the live API (e.g. "whatever" alone came back with an Italian
+// translation). The system prompt asks it not to do this, but that alone
+// doesn't fully hold for this specific shape of input, the same way the
+// citation-bracket instruction alone didn't fully hold — so this appends a
+// short, invisible-to-the-user clarifying note to the outgoing text only
+// when the message is this short, rather than bloating the prompt (and
+// every reply) for something that only matters in this one input shape.
+const SHORT_MESSAGE_HINT =
+  '\n\n(That was their whole message — a short, real reaction, not a request to define, translate, or explain the word. Respond to how they might be feeling, not to the word itself.)';
 
+function isBareShortMessage(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  return trimmed.split(/\s+/).length === 1 || trimmed.length <= 6;
+}
+
+// Only the last (current) user message is annotated/can carry images —
+// history stays exactly as it was actually said, matching what's shown in
+// the chat log.
+function toPayloadMessages(messages: ChatMessage[], images: string[]): unknown[] {
   const lastUserIndex = messages.map((m) => m.role).lastIndexOf('user');
+
   return messages.map((message, index) => {
     if (index !== lastUserIndex) return message;
+
+    const text = isBareShortMessage(message.content)
+      ? `${message.content}${SHORT_MESSAGE_HINT}`
+      : message.content;
+
+    if (images.length === 0) {
+      return text === message.content ? message : { role: message.role, content: text };
+    }
+
     return {
       role: message.role,
       content: [
-        { type: 'text', text: message.content },
+        { type: 'text', text },
         ...images.map((url) => ({ type: 'image_url', image_url: { url } })),
       ],
     };

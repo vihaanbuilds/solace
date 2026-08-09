@@ -6,7 +6,7 @@ import { AiLoadingBanner } from './AiLoadingBanner';
 import { ModelPicker } from './ModelPicker';
 import { CursiveReveal } from './CursiveReveal';
 import { TypewriterGreeting } from './TypewriterGreeting';
-import { ImageIcon, CloseIcon } from './icons';
+import { PaperclipIcon, CloseIcon } from './icons';
 import { getResponse, ConversationTurn } from '../lib/responses/responseEngine';
 import { Mode } from '../lib/responses/templates';
 import { processImageFile, MAX_IMAGES } from '../lib/ai/imageUpload';
@@ -191,7 +191,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
               aria-label="Attach an image"
               title={`Attach up to ${MAX_IMAGES} images`}
             >
-              <ImageIcon />
+              <PaperclipIcon />
             </button>
           </>
         )}

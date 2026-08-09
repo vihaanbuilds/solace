@@ -289,12 +289,10 @@ export function LogOutIcon(props: IconProps) {
   );
 }
 
-export function ImageIcon(props: IconProps) {
+export function PaperclipIcon(props: IconProps) {
   return (
     <svg {...base(props)}>
-      <rect x="3.5" y="4.5" width="17" height="15" rx="1.8" />
-      <circle cx="8.5" cy="9.5" r="1.6" />
-      <path d="M4 16.5l5-5 4 4 3-3 4 4" />
+      <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
     </svg>
   );
 }

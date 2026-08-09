@@ -802,13 +802,21 @@ body {
   color: var(--color-text-soft);
 }
 
-.chat-attach-btn {
+/* .chat-input-row's generic `button` rule sets a 0.6rem/1.1rem padding
+   with higher specificity than `.chat-attach-btn` alone — combined with
+   global border-box sizing, that padding ate almost this button's entire
+   fixed width, squeezing the icon down to invisible. The 2-class selector
+   here wins the specificity fight and explicitly re-declares padding, the
+   same fix already used for .model-picker-trigger below. */
+.chat-input-row .chat-attach-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid var(--glass-border) !important;
   border-radius: 999px;
   width: 2.4rem;
+  height: 2.4rem;
+  padding: 0;
   flex-shrink: 0;
   background: var(--glass-bg);
   color: var(--color-text);
