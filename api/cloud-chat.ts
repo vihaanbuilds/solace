@@ -3,6 +3,8 @@
 // endpoint, this endpoint calls the provider, and the response streams back
 // through. Keep it that way — moving this call into client code would leak
 // the key to anyone who opens the Network tab on the live site.
+import { checkRateLimit, getClientIp } from './_lib/rateLimit';
+
 export const config = { runtime: 'edge' };
 
 // Only ever forward requests for models we've actually verified work on
@@ -11,11 +13,14 @@ export const config = { runtime: 'edge' };
 // failures or unexpected cost.
 const ALLOWED_MODELS = new Set(['sonar']);
 const DEFAULT_MODEL = 'sonar';
+const KNOWN_TIERS = new Set(['sprout', 'bud', 'bloom', 'canopy']);
+const DEFAULT_TIER = 'bud';
 
 interface CloudChatRequestBody {
   messages?: unknown;
   model?: string;
   max_tokens?: unknown;
+  tier?: string;
 }
 
 // Images are sent as base64 data URLs inside message content, which can get
@@ -72,6 +77,28 @@ export default async function handler(req: Request): Promise<Response> {
     typeof body.max_tokens === 'number' && body.max_tokens > 0 && body.max_tokens <= MAX_TOKENS_CEILING
       ? body.max_tokens
       : undefined;
+  const tier = typeof body.tier === 'string' && KNOWN_TIERS.has(body.tier) ? body.tier : DEFAULT_TIER;
+
+  // The real, server-side backstop against deliberate abuse — the client's
+  // own daily nudge (messageLimits.ts) is easily bypassed by clearing
+  // storage or hitting this endpoint directly, so this is what actually
+  // bounds cost from a bad actor rather than a well-behaved browser.
+  const ip = getClientIp(req);
+  const rateLimit = await checkRateLimit(ip, tier);
+  if (!rateLimit.allowed) {
+    return new Response(
+      JSON.stringify({
+        error:
+          rateLimit.reason === 'burst'
+            ? 'Too many requests — please slow down and try again in a minute.'
+            : 'Daily request limit reached for this network. It resets tomorrow.',
+      }),
+      {
+        status: 429,
+        headers: { 'content-type': 'application/json', 'retry-after': '60' },
+      }
+    );
+  }
 
   let upstream: Response;
   try {

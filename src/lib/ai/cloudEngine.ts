@@ -63,6 +63,9 @@ export async function generateCloudReply(
       messages: toPayloadMessages(messages, images),
       model: 'sonar',
       max_tokens: MAX_TOKENS[tier],
+      // Lets the server apply its own per-tier daily rate limit — the real
+      // backstop behind this browser's own daily nudge (messageLimits.ts).
+      tier,
     }),
   });
 
