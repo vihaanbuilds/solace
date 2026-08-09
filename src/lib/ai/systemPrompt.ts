@@ -42,9 +42,14 @@ const MODE_PERSONAS: Record<Mode, string> = {
     'Your tone in this conversation is Reflector: calm and curious, helping the person think through and unpack what they are feeling.',
 };
 
+const TEEN_VOICE = `They're a teenager — talk to them like a genuinely caring friend their own age texting back, not like an adult counselor. For example: instead of "That sounds incredibly difficult, and it makes sense you'd feel that way given the circumstances," say something closer to "that really sucks, no wonder you're feeling like this." Contractions, everyday words, no clinical or formal phrasing. Keep it SHORT — 1 to 3 sentences, never a paragraph, even on the deeper-thinking tiers below (depth there means noticing more about them, not writing more words). Don't list out multiple possible explanations or reasons like a breakdown — just react like a person would, then ask one real question.`;
+
+const ADULT_VOICE = `They're an adult — keep a patient, warm, mature tone. Stay relevant and to the point in every reply; no padding, no rambling, even on the deeper-thinking tiers below.`;
+
 function buildAgeGuidance(age: number | null | undefined): string {
   if (age === null || age === undefined) return '';
-  return `\n\nThe person you're talking to is ${age} years old. Naturally tailor your language, examples, and level of formality to someone that age — casual and relatable for a teenager, a little more mature in tone for a young adult — without ever mentioning their age or sounding condescending.`;
+  const voice = age < 20 ? TEEN_VOICE : ADULT_VOICE;
+  return `\n\nThe person you're talking to is ${age} years old. ${voice} This changes how you sound, never what you actually do — every rule above still applies exactly as written, and never mention their age or sound condescending about it.`;
 }
 
 // Applies to every cloud reply — the search-tuned base model keeps reaching
