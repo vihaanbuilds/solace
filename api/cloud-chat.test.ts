@@ -168,3 +168,86 @@ describe('api/cloud-chat rate limiting', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('api/cloud-chat Canopy provider routing', () => {
+  const originalEnv = { ...process.env };
+  const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai';
+  const GEMINI_API_KEY = 'test-gemini-key';
+
+  beforeEach(() => {
+    process.env.OPENAI_API_KEY = OPENAI_API_KEY;
+    process.env.OPENAI_BASE_URL = OPENAI_BASE_URL;
+    delete process.env.UPSTASH_REDIS_REST_URL;
+    delete process.env.UPSTASH_REDIS_REST_TOKEN;
+    delete process.env.GEMINI_API_KEY;
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+    vi.restoreAllMocks();
+  });
+
+  it('routes canopy to Gemini when GEMINI_API_KEY is configured', async () => {
+    process.env.GEMINI_API_KEY = GEMINI_API_KEY;
+    const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = urlOf(input);
+      if (url.startsWith(GEMINI_BASE_URL)) return sseUpstreamResponse();
+      throw new Error('unexpected fetch: ' + url);
+    });
+
+    const res = await handler(
+      makeRequest({ messages: [{ role: 'user', content: 'hi' }], tier: 'canopy' })
+    );
+
+    expect(res.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to sonar when the Gemini request fails for canopy', async () => {
+    process.env.GEMINI_API_KEY = GEMINI_API_KEY;
+    const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = urlOf(input);
+      if (url.startsWith(GEMINI_BASE_URL)) return new Response('rate limited', { status: 429 });
+      if (url.startsWith(OPENAI_BASE_URL)) return sseUpstreamResponse();
+      throw new Error('unexpected fetch: ' + url);
+    });
+
+    const res = await handler(
+      makeRequest({ messages: [{ role: 'user', content: 'hi' }], tier: 'canopy' })
+    );
+
+    expect(res.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('uses sonar directly for canopy when GEMINI_API_KEY is not set', async () => {
+    const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = urlOf(input);
+      if (url.startsWith(OPENAI_BASE_URL)) return sseUpstreamResponse();
+      throw new Error('unexpected fetch: ' + url);
+    });
+
+    const res = await handler(
+      makeRequest({ messages: [{ role: 'user', content: 'hi' }], tier: 'canopy' })
+    );
+
+    expect(res.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('never routes non-canopy tiers to Gemini even when GEMINI_API_KEY is set', async () => {
+    process.env.GEMINI_API_KEY = GEMINI_API_KEY;
+    const fetchSpy = vi.spyOn(global, 'fetch').mockImplementation(async (input) => {
+      const url = urlOf(input);
+      if (url.startsWith(OPENAI_BASE_URL)) return sseUpstreamResponse();
+      throw new Error('unexpected fetch: ' + url);
+    });
+
+    const res = await handler(
+      makeRequest({ messages: [{ role: 'user', content: 'hi' }], tier: 'bud' })
+    );
+
+    expect(res.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+});

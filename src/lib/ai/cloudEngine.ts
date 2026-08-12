@@ -7,11 +7,20 @@ const CLOUD_ENDPOINT = '/api/cloud-chat';
 // system prompt (see systemPrompt.ts). These just cap runaway generation,
 // set high enough above each tier's expected reply length that a truncated
 // mid-sentence cutoff should never actually happen in practice.
+//
+// bloom and canopy both run on models that spend an invisible reasoning pass
+// before writing any visible reply, and that pass alone was observed using
+// up to ~1000 tokens on a real prompt — well past their old 800 budget. When
+// that happened, the reasoning pass consumed the entire budget and the
+// model returned an empty reply. 3000 leaves comfortable headroom (measured
+// real completions topped out under 1000 total) without changing reply
+// length in practice, since the system prompt — not this ceiling — is what
+// actually controls how long a reply reads.
 const MAX_TOKENS: Record<ChatTier, number> = {
   sprout: 300,
   bud: 500,
-  bloom: 800,
-  canopy: 800,
+  bloom: 3000,
+  canopy: 3000,
 };
 
 // The cloud model is search-tuned and keeps emitting citation markers like
@@ -89,7 +98,6 @@ export async function generateCloudReply(
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       messages: toPayloadMessages(messages, images),
-      model: 'sonar',
       max_tokens: MAX_TOKENS[tier],
       // Lets the server apply its own per-tier daily rate limit — the real
       // backstop behind this browser's own daily nudge (messageLimits.ts).
