@@ -59,3 +59,79 @@ if (!window.matchMedia) {
     };
   };
 }
+
+// jsdom does not implement the Web Audio API at all. This is a minimal fake
+// AudioContext with just enough surface for src/lib/audio/soundSynth.ts to
+// run without throwing — connections and audio output are no-ops, since
+// tests only need this code path not to crash, not to produce real sound.
+function createFakeAudioParam(initial: number) {
+  return {
+    value: initial,
+    setValueAtTime: () => {},
+    linearRampToValueAtTime: () => {},
+  };
+}
+
+function createFakeAudioNode() {
+  return {
+    // Real AudioNode.connect() returns the destination node so calls can
+    // chain (`a.connect(b).connect(c)`) — soundSynth.ts relies on that, so
+    // the fake must too, or the second .connect() in a chain throws.
+    connect: (target: unknown) => target,
+    disconnect: () => {},
+  };
+}
+
+class FakeAudioContext {
+  sampleRate = 44100;
+  currentTime = 0;
+  state: 'running' | 'suspended' = 'running';
+  destination = createFakeAudioNode();
+
+  resume() {
+    this.state = 'running';
+    return Promise.resolve();
+  }
+
+  createBuffer(_channels: number, length: number) {
+    const data = new Float32Array(length);
+    return { getChannelData: () => data };
+  }
+
+  createBufferSource() {
+    return { ...createFakeAudioNode(), buffer: null, loop: false, start: () => {}, stop: () => {} };
+  }
+
+  createBiquadFilter() {
+    return {
+      ...createFakeAudioNode(),
+      type: 'lowpass',
+      frequency: createFakeAudioParam(350),
+      Q: createFakeAudioParam(1),
+    };
+  }
+
+  createGain() {
+    return { ...createFakeAudioNode(), gain: createFakeAudioParam(1) };
+  }
+
+  createOscillator() {
+    return {
+      ...createFakeAudioNode(),
+      type: 'sine',
+      frequency: createFakeAudioParam(440),
+      start: () => {},
+      stop: () => {},
+    };
+  }
+
+  createConstantSource() {
+    return { ...createFakeAudioNode(), offset: createFakeAudioParam(0), start: () => {}, stop: () => {} };
+  }
+}
+
+Object.defineProperty(globalThis, 'AudioContext', {
+  value: FakeAudioContext,
+  configurable: true,
+  writable: true,
+});
