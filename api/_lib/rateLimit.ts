@@ -32,6 +32,10 @@ const DAILY_IP_LIMITS: Record<string, number> = {
   bud: 350,
   bloom: 150,
   canopy: 100,
+  // Not a chat tier — the ambient-sounds custom-blend endpoint. Deliberately
+  // the lowest limit: a nice-to-have creative tool, not core chat, so it
+  // gets the least generous budget.
+  'sound-blend': 100,
 };
 const DEFAULT_DAILY_LIMIT = DAILY_IP_LIMITS.bud;
 const DAILY_KEY_TTL_SECONDS = 26 * 60 * 60; // buffer past the UTC day boundary

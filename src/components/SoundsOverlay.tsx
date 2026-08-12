@@ -12,7 +12,7 @@ import {
   toggleLayer,
   LayerVolumes,
 } from '../lib/audio/soundMixer';
-import { SOUND_LAYERS, SoundLayer } from '../lib/audio/soundSynth';
+import { SOUND_LAYERS, SoundLayer, getAudioContext } from '../lib/audio/soundSynth';
 import { requestSoundBlend } from '../lib/audio/soundBlendClient';
 import { loadSoundDescription, saveSoundDescription } from '../lib/storage';
 
@@ -35,7 +35,12 @@ export function SoundsOverlay({ onClose }: SoundsOverlayProps) {
   // acts (taps resume, or toggles anything), isPlaying() becomes true and
   // this affordance should simply disappear on the next volumes update.
   const [savedMix] = useState(() => loadSoundMix());
-  const showResume = !isPlaying() && savedMix !== null;
+  // savedMix !== null isn't enough: the mixer persists on every change,
+  // including stopAll() zeroing everything out, so "stop the sound" leaves
+  // behind a non-null all-zero saved mix. Only offer resume if it actually
+  // has something to resume.
+  const showResume =
+    !isPlaying() && savedMix !== null && SOUND_LAYERS.some((layer) => savedMix[layer] > 0);
 
   useEffect(() => subscribeToSoundMixer((next) => setVolumes(next)), []);
 
@@ -51,6 +56,12 @@ export function SoundsOverlay({ onClose }: SoundsOverlayProps) {
     e.preventDefault();
     const trimmed = description.trim();
     if (!trimmed) return;
+    // Create/resume the AudioContext synchronously, before the await below,
+    // so it happens inside this click's own task while the user gesture is
+    // still "fresh". If this were deferred until after the network request
+    // for the blend came back, browsers (notably Safari) can refuse to let
+    // audio start, and the user would see a "success" UI with no sound.
+    getAudioContext();
     setStatus('loading');
     try {
       const blend = await requestSoundBlend(trimmed);

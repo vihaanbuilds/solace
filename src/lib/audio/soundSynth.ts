@@ -24,7 +24,11 @@ export function getAudioContext(): AudioContext {
     sharedContext = new AudioContext();
   }
   if (sharedContext.state === 'suspended') {
-    sharedContext.resume();
+    // Fire-and-forget: there's nothing user-visible to do with a rejection
+    // here (the caller already has the context reference and just proceeds
+    // to use it), but an unhandled promise rejection is still worth
+    // avoiding, so catch and drop it.
+    sharedContext.resume().catch(() => {});
   }
   return sharedContext;
 }
@@ -48,9 +52,10 @@ function createLoopingNoise(context: AudioContext): AudioBufferSourceNode {
 }
 
 // Two slightly-detuned oscillators (a non-integer frequency ratio) summed
-// into one AudioParam create a slow wander around baseValue that never
-// exactly repeats within a single playback, instead of one oscillator's
-// perfectly periodic pulse.
+// into one AudioParam create a slow wander around whatever value the target
+// AudioParam already has — depth controls how far it wanders, baseRateHz
+// how fast — that never exactly repeats within a single playback, instead
+// of one oscillator's perfectly periodic pulse.
 function connectWanderingValue(
   context: AudioContext,
   target: AudioParam,
@@ -79,24 +84,66 @@ function connectWanderingValue(
   };
 }
 
+// Shared trim applied after every layer's own volumeGain, before the
+// hardware destination — headroom against clipping when several layers are
+// stacked at once, on top of each layer's own per-type trim below.
+const MASTER_TRIM = 0.75;
+
+let masterGain: GainNode | null = null;
+
+function getMasterGain(context: AudioContext): GainNode {
+  if (!masterGain) {
+    masterGain = context.createGain();
+    masterGain.gain.value = MASTER_TRIM;
+    masterGain.connect(context.destination);
+  }
+  return masterGain;
+}
+
 function createVolumeGain(context: AudioContext): GainNode {
   const gain = context.createGain();
   gain.gain.value = 0;
-  gain.connect(context.destination);
+  gain.connect(getMasterGain(context));
   return gain;
 }
 
-function makeController(volumeGain: GainNode, cleanup: () => void): LayerController {
+// Volume changes ramp instead of jumping instantly — a plain `gain.value =`
+// assignment is an instantaneous step, which is an audible click/pop, and
+// since setVolume is called on every slider-drag tick that would mean a
+// "zipper" of clicks while dragging. Stop ramps to silence first and only
+// disconnects once the fade has actually finished (on the real clock —
+// Web Audio has no primitive for "run this JS callback at audio time X"),
+// so it doesn't get cut off by an immediate disconnect.
+const VOLUME_RAMP_SECONDS = 0.05;
+const STOP_FADE_SECONDS = 0.1;
+
+function makeController(context: AudioContext, volumeGain: GainNode, cleanup: () => void): LayerController {
   return {
     setVolume(volume: number) {
-      volumeGain.gain.value = Math.max(0, Math.min(1, volume));
+      const clamped = Math.max(0, Math.min(1, volume));
+      volumeGain.gain.linearRampToValueAtTime(clamped, context.currentTime + VOLUME_RAMP_SECONDS);
     },
     stop() {
-      cleanup();
-      volumeGain.disconnect();
+      volumeGain.gain.linearRampToValueAtTime(0, context.currentTime + STOP_FADE_SECONDS);
+      setTimeout(() => {
+        cleanup();
+        volumeGain.disconnect();
+      }, STOP_FADE_SECONDS * 1000);
     },
   };
 }
+
+// Per-layer trim constants so all four layers read as roughly balanced
+// against each other at the same setVolume() input — without these, a
+// layer's timbre (pure tone vs. filtered noise, which frequency range)
+// affects perceived loudness far more than the 0-1 slider position does.
+const OCEAN_SHAPE_GAIN = 0.7; // mostly low-frequency energy, already reads as gentler to the ear
+const RAIN_TRIM = 0.55; // bandpass noise centered near 3kHz — the ear's most sensitive range, so trimmed down
+const BREEZE_TRIM = 0.6; // bandpass noise centered near 800Hz — less sensitive range, trimmed mainly for headroom
+// A raw sine burst at full scale is genuinely piercing, especially in the
+// 2.2-3.4kHz range (the ear's most sensitive band) — trimmed hard so a chirp
+// reads as a bright accent instead of dominating the other three layers.
+const BIRDS_CHIRP_GAIN = 0.2;
 
 // Low-pass-filtered noise with a slow, irregular gain envelope — the uneven
 // rolling swell of waves breaking non-periodically.
@@ -108,7 +155,7 @@ export function createOceanLayer(context: AudioContext): LayerController {
   noise.connect(filter);
 
   const shapeGain = context.createGain();
-  shapeGain.gain.value = 0.7;
+  shapeGain.gain.value = OCEAN_SHAPE_GAIN;
   filter.connect(shapeGain);
 
   const volumeGain = createVolumeGain(context);
@@ -116,7 +163,7 @@ export function createOceanLayer(context: AudioContext): LayerController {
 
   const stopWander = connectWanderingValue(context, shapeGain.gain, 0.3, 0.12);
 
-  return makeController(volumeGain, () => {
+  return makeController(context, volumeGain, () => {
     noise.stop();
     stopWander();
     noise.disconnect();
@@ -135,13 +182,18 @@ export function createRainLayer(context: AudioContext): LayerController {
   filter.Q.value = 0.5;
   noise.connect(filter);
 
-  const volumeGain = createVolumeGain(context);
-  filter.connect(volumeGain);
+  const trimGain = context.createGain();
+  trimGain.gain.value = RAIN_TRIM;
+  filter.connect(trimGain);
 
-  return makeController(volumeGain, () => {
+  const volumeGain = createVolumeGain(context);
+  trimGain.connect(volumeGain);
+
+  return makeController(context, volumeGain, () => {
     noise.stop();
     noise.disconnect();
     filter.disconnect();
+    trimGain.disconnect();
   });
 }
 
@@ -155,16 +207,21 @@ export function createBreezeLayer(context: AudioContext): LayerController {
   filter.Q.value = 0.7;
   noise.connect(filter);
 
+  const trimGain = context.createGain();
+  trimGain.gain.value = BREEZE_TRIM;
+  filter.connect(trimGain);
+
   const volumeGain = createVolumeGain(context);
-  filter.connect(volumeGain);
+  trimGain.connect(volumeGain);
 
   const stopWander = connectWanderingValue(context, filter.frequency, 400, 0.05);
 
-  return makeController(volumeGain, () => {
+  return makeController(context, volumeGain, () => {
     noise.stop();
     stopWander();
     noise.disconnect();
     filter.disconnect();
+    trimGain.disconnect();
   });
 }
 
@@ -185,7 +242,7 @@ export function createBirdsLayer(context: AudioContext): LayerController {
 
     const chirpGain = context.createGain();
     chirpGain.gain.setValueAtTime(0, context.currentTime);
-    chirpGain.gain.linearRampToValueAtTime(1, context.currentTime + 0.02);
+    chirpGain.gain.linearRampToValueAtTime(BIRDS_CHIRP_GAIN, context.currentTime + 0.02);
     chirpGain.gain.linearRampToValueAtTime(0, context.currentTime + 0.15);
 
     osc.connect(chirpGain);
@@ -205,7 +262,7 @@ export function createBirdsLayer(context: AudioContext): LayerController {
 
   scheduleNextChirp();
 
-  return makeController(volumeGain, () => {
+  return makeController(context, volumeGain, () => {
     stopped = true;
     clearTimeout(timeoutId);
   });
