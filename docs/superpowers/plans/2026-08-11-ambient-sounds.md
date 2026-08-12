@@ -1584,7 +1584,7 @@ Add to `src/styles/theme.css`, after the `.settings-ai-desc {}` block:
 
 - [ ] **Step 3: Type-check**
 
-Run: `npx tsc -b --noEmit`
+Run: `npx tsc -b`
 Expected: No errors.
 
 - [ ] **Step 4: Commit**
@@ -1688,7 +1688,7 @@ Expected: PASS, every test file green.
 
 - [ ] **Step 6: Type-check**
 
-Run: `npx tsc -b --noEmit`
+Run: `npx tsc -b`
 Expected: No errors.
 
 - [ ] **Step 7: Manual verification**
