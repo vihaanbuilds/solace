@@ -9,6 +9,8 @@ import { PrivacyToggle } from './components/PrivacyToggle';
 import { LotusLogo } from './components/LotusLogo';
 import { ProfileSetupModal } from './components/ProfileSetupModal';
 import { SettingsModal } from './components/SettingsModal';
+import { SoundButton } from './components/SoundButton';
+import { SoundsOverlay } from './components/SoundsOverlay';
 import { ChevronLeftIcon, MenuIcon } from './components/icons';
 import { GoogleProfile, loadGoogleProfile } from './lib/googleAuth';
 import {
@@ -56,6 +58,7 @@ export default function App() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(() => loadUserProfile());
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSounds, setShowSounds] = useState(false);
   const [welcomeMessage] = useState(
     () => WELCOME_MESSAGES[Math.floor(Math.random() * WELCOME_MESSAGES.length)]
   );
@@ -309,6 +312,7 @@ export default function App() {
           </div>
           <div className="app-header-controls app-header-controls-right">
             <AiStatusIndicator />
+            <SoundButton onClick={() => setShowSounds(true)} />
             <PrivacyToggle
               unlocked={privateUnlocked}
               onUnlock={handlePrivacyUnlock}
@@ -335,6 +339,7 @@ export default function App() {
           onClose={() => setShowSettings(false)}
         />
       )}
+      {showSounds && <SoundsOverlay onClose={() => setShowSounds(false)} />}
     </div>
   );
 }

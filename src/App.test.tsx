@@ -328,6 +328,34 @@ describe('App', () => {
     });
   });
 
+  describe('ambient sounds', () => {
+    function getSoundButton(): HTMLElement {
+      return screen.getByLabelText('Open ambient sound picker');
+    }
+
+    it('opens the ambient sounds overlay from the chat header', async () => {
+      const user = userEvent.setup();
+      await completeOnboarding(user);
+
+      await user.click(getSoundButton());
+
+      expect(screen.getByRole('dialog', { name: 'Ambient sounds' })).toBeInTheDocument();
+    });
+
+    it('toggling a preset shows it as active, and closing the overlay keeps it playing', async () => {
+      const user = userEvent.setup();
+      await completeOnboarding(user);
+
+      await user.click(getSoundButton());
+      await user.click(screen.getByRole('button', { name: 'Ocean' }));
+      expect(screen.getByRole('button', { name: 'Ocean' })).toHaveAttribute('aria-pressed', 'true');
+
+      await user.click(screen.getByLabelText('Close ambient sounds'));
+      expect(screen.queryByRole('dialog', { name: 'Ambient sounds' })).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/ambient sounds playing/i)).toBeInTheDocument();
+    });
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
