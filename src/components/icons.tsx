@@ -305,3 +305,11 @@ export function QuoteIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function WaveIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M3 12c1.5-3 3-3 4.5 0s3 3 4.5 0 3-3 4.5 0 3 3 4.5 0" />
+    </svg>
+  );
+}

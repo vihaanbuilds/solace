@@ -943,6 +943,39 @@ body {
   color: var(--color-text);
 }
 
+.sound-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 999px;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-text-soft);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.sound-button:hover {
+  transform: translateY(-1px);
+  color: var(--color-text);
+}
+
+.sound-button-playing {
+  color: var(--color-accent);
+  animation: sound-glow-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes sound-glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--color-accent);
+  }
+  50% {
+    box-shadow: 0 0 10px 2px var(--color-accent);
+  }
+}
+
 .sidebar-new-chat {
   border: none;
   border-radius: 999px;
