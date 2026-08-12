@@ -25,6 +25,13 @@ export interface UserProfile {
   dateOfBirth: string;
 }
 
+export interface SoundMix {
+  ocean: number;
+  rain: number;
+  birds: number;
+  breeze: number;
+}
+
 // All four are cloud-backed (Sonar) by default, differentiated only by
 // pacing/depth of the system prompt. Bloom is the sole exception: it can
 // optionally run fully on-device instead, gated by bloomLocalMode below.
@@ -40,6 +47,8 @@ const PRIVATE_PASSCODE_KEY = 'solace.privatePasscode';
 const USER_PROFILE_KEY = 'solace.userProfile';
 const AI_TIER_KEY = 'solace.aiTier';
 const BLOOM_LOCAL_MODE_KEY = 'solace.bloomLocalMode';
+const SOUND_MIX_KEY = 'solace.soundMix';
+const SOUND_DESCRIPTION_KEY = 'solace.soundDescription';
 
 export function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -195,6 +204,28 @@ export function saveBloomLocalMode(enabled: boolean): void {
 
 export function loadBloomLocalMode(): boolean {
   return localStorage.getItem(BLOOM_LOCAL_MODE_KEY) === 'true';
+}
+
+export function saveSoundMix(mix: SoundMix): void {
+  localStorage.setItem(SOUND_MIX_KEY, JSON.stringify(mix));
+}
+
+export function loadSoundMix(): SoundMix | null {
+  const raw = localStorage.getItem(SOUND_MIX_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as SoundMix;
+  } catch {
+    return null;
+  }
+}
+
+export function saveSoundDescription(description: string): void {
+  localStorage.setItem(SOUND_DESCRIPTION_KEY, description);
+}
+
+export function loadSoundDescription(): string {
+  return localStorage.getItem(SOUND_DESCRIPTION_KEY) ?? '';
 }
 
 // Full local reset for the "delete account" settings action — sweeps every

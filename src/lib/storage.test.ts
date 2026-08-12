@@ -14,6 +14,11 @@ import {
   createId,
   Conversation,
   StoredMessage,
+  saveSoundMix,
+  loadSoundMix,
+  saveSoundDescription,
+  loadSoundDescription,
+  SoundMix,
 } from './storage';
 
 describe('storage', () => {
@@ -101,5 +106,31 @@ describe('storage', () => {
     const a = createId();
     const b = createId();
     expect(a).not.toBe(b);
+  });
+
+  describe('sound mix', () => {
+    it('round-trips a sound mix through localStorage', () => {
+      const mix: SoundMix = { ocean: 0.6, rain: 0.2, birds: 0, breeze: 0.4 };
+      saveSoundMix(mix);
+      expect(loadSoundMix()).toEqual(mix);
+    });
+
+    it('returns null when no mix has been saved', () => {
+      expect(loadSoundMix()).toBeNull();
+    });
+
+    it('returns null for corrupted JSON instead of throwing', () => {
+      localStorage.setItem('solace.soundMix', 'not json');
+      expect(loadSoundMix()).toBeNull();
+    });
+
+    it('round-trips a sound description through localStorage', () => {
+      saveSoundDescription('a quiet forest morning');
+      expect(loadSoundDescription()).toBe('a quiet forest morning');
+    });
+
+    it('returns an empty string when no description has been saved', () => {
+      expect(loadSoundDescription()).toBe('');
+    });
   });
 });
