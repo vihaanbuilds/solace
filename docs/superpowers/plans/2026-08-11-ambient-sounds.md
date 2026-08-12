@@ -338,13 +338,19 @@ function createLoopingNoise(context: AudioContext): AudioBufferSourceNode {
 }
 
 // Two slightly-detuned oscillators (a non-integer frequency ratio) summed
-// into one AudioParam create a slow wander around baseValue that never
-// exactly repeats within a single playback, instead of one oscillator's
-// perfectly periodic pulse.
+// into one AudioParam create a slow wander that never exactly repeats
+// within a single playback, instead of one oscillator's perfectly
+// periodic pulse. Both oscillators are zero-mean (sine), and values
+// connected into an AudioParam SUM with its existing intrinsic value
+// rather than replacing it — so the caller's own `target.value = base`
+// assignment (already set before calling this) supplies the center
+// point; this function only adds the wander on top of it. It must NOT
+// also inject a constant offset for that same base value, or the two
+// would double-count and the param would wander around roughly 2x the
+// intended center.
 function connectWanderingValue(
   context: AudioContext,
   target: AudioParam,
-  baseValue: number,
   depth: number,
   baseRateHz: number
 ): () => void {
@@ -358,21 +364,15 @@ function connectWanderingValue(
   depthGainA.gain.value = depth * 0.5;
   depthGainB.gain.value = depth * 0.5;
 
-  const offset = context.createConstantSource();
-  offset.offset.value = baseValue;
-
   lfoA.connect(depthGainA).connect(target);
   lfoB.connect(depthGainB).connect(target);
-  offset.connect(target);
 
   lfoA.start();
   lfoB.start();
-  offset.start();
 
   return () => {
     lfoA.stop();
     lfoB.stop();
-    offset.stop();
   };
 }
 
@@ -411,7 +411,7 @@ export function createOceanLayer(context: AudioContext): LayerController {
   const volumeGain = createVolumeGain(context);
   shapeGain.connect(volumeGain);
 
-  const stopWander = connectWanderingValue(context, shapeGain.gain, 0.7, 0.3, 0.12);
+  const stopWander = connectWanderingValue(context, shapeGain.gain, 0.3, 0.12);
 
   return makeController(volumeGain, () => {
     noise.stop();
@@ -455,7 +455,7 @@ export function createBreezeLayer(context: AudioContext): LayerController {
   const volumeGain = createVolumeGain(context);
   filter.connect(volumeGain);
 
-  const stopWander = connectWanderingValue(context, filter.frequency, 800, 400, 0.05);
+  const stopWander = connectWanderingValue(context, filter.frequency, 400, 0.05);
 
   return makeController(volumeGain, () => {
     noise.stop();
