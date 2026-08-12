@@ -1188,14 +1188,14 @@ const { mixerState, listeners } = vi.hoisted(() => ({
 }));
 
 vi.mock('../lib/audio/soundMixer', () => ({
-  isPlaying: () => mixerState.playing,
-  subscribeToSoundMixer: (listener: (volumes: unknown) => void) => {
+  isPlaying: vi.fn(() => mixerState.playing),
+  subscribeToSoundMixer: vi.fn((listener: (volumes: unknown) => void) => {
     listeners.add(listener);
     return () => listeners.delete(listener);
-  },
+  }),
 }));
 vi.mock('../lib/audio/soundSynth', () => ({
-  isAudioSupported: () => true,
+  isAudioSupported: vi.fn(() => true),
 }));
 
 import { SoundButton } from './SoundButton';
