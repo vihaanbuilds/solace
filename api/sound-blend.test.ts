@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import handler from './sound-blend';
 
-const OPENAI_BASE_URL = 'https://example-provider.io/v1';
+const OPENAI_BASE_URL = 'https://api.aquadevs.com/v1';
 const OPENAI_API_KEY = 'test-key';
 
 function makeRequest(body: unknown): Request {

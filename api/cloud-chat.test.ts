@@ -3,7 +3,7 @@ import handler from './cloud-chat';
 
 const UPSTASH_URL = 'https://example-upstash.io';
 const UPSTASH_TOKEN = 'test-upstash-token';
-const OPENAI_BASE_URL = 'https://example-provider.io/v1';
+const OPENAI_BASE_URL = 'https://api.aquadevs.com/v1';
 const OPENAI_API_KEY = 'test-key';
 
 function makeRequest(body: unknown): Request {
