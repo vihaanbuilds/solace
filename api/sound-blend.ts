@@ -7,6 +7,10 @@ import { checkRateLimit, getClientIp } from './_lib/rateLimit';
 
 export const config = { runtime: 'edge' };
 
+// A public API address, not a secret. Pinned in code because the copy stored
+// in OPENAI_BASE_URL on Vercel went stale and made every request 404.
+const AQUA_BASE_URL = 'https://api.aquadevs.com/v1';
+
 const MODEL = 'llama-3.1';
 const MAX_DESCRIPTION_LENGTH = 300;
 const SOUND_LAYERS = ['ocean', 'rain', 'birds', 'breeze'] as const;
@@ -27,8 +31,7 @@ Each value is a number from 0 (silent) to 1 (loudest). At least one value should
 
 function aquaConfig(): { apiKey: string; baseUrl: string } | null {
   const apiKey = process.env.OPENAI_API_KEY;
-  const baseUrl = process.env.OPENAI_BASE_URL;
-  return apiKey && baseUrl ? { apiKey, baseUrl } : null;
+  return apiKey ? { apiKey, baseUrl: AQUA_BASE_URL } : null;
 }
 
 function parseBlend(text: string): Record<SoundLayer, number> | null {

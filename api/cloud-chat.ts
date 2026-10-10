@@ -7,6 +7,10 @@ import { checkRateLimit, getClientIp } from './_lib/rateLimit';
 
 export const config = { runtime: 'edge' };
 
+// A public API address, not a secret. Pinned in code because the copy stored
+// in OPENAI_BASE_URL on Vercel went stale and made every request 404.
+const AQUA_BASE_URL = 'https://api.aquadevs.com/v1';
+
 const KNOWN_TIERS = new Set(['sprout', 'bud', 'bloom', 'canopy']);
 const DEFAULT_TIER = 'bud';
 
@@ -72,8 +76,7 @@ const TIER_CHAINS: Record<string, string[]> = {
 
 function aquaProvider(model: string): Provider | null {
   const apiKey = process.env.OPENAI_API_KEY;
-  const baseUrl = process.env.OPENAI_BASE_URL;
-  return apiKey && baseUrl ? { apiKey, baseUrl, model } : null;
+  return apiKey ? { apiKey, baseUrl: AQUA_BASE_URL, model } : null;
 }
 
 function geminiProvider(): Provider | null {
