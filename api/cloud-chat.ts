@@ -56,10 +56,19 @@ interface Provider {
 // reasoning pass, answered consistently in the same few seconds across
 // every trial, and reads just as warm and specific — reliability matters
 // more than raw depth for a tier real people rely on mid-crisis.
-const SONAR_MODEL = 'sonar';
-const SPROUT_MODEL = 'llama-3.1';
-const BUD_MODEL = 'glm-5.2';
-const BLOOM_MODEL = 'deepseek-v3.2';
+// Models verified working on this key (standard tier). The provider has
+// retired or locked models before: deepseek-v3.2 was removed and sonar now
+// requires an invitation, which silently broke every tier at once. So each
+// tier has an ordered chain of working models and tries the next one on any
+// failure, instead of depending on a single model staying available.
+const TIER_CHAINS: Record<string, string[]> = {
+  sprout: ['llama-3.1', 'gpt-oss', 'gemma-4', 'deepseek-v4.1-flash'],
+  bud: ['glm-5.2', 'gpt-oss', 'gemma-4', 'llama-3.1'],
+  bloom: ['deepseek-v4.1-flash', 'glm-5.2', 'gpt-oss', 'gemma-4'],
+  // Canopy tries Gemini directly first (if configured), then the same
+  // vision-capable model through the shared provider.
+  canopy: ['gemini-3.1-lite', 'deepseek-v4.1-flash', 'gpt-oss'],
+};
 
 function aquaProvider(model: string): Provider | null {
   const apiKey = process.env.OPENAI_API_KEY;
@@ -72,27 +81,22 @@ function geminiProvider(): Provider | null {
   return apiKey ? { apiKey, baseUrl: GEMINI_BASE_URL, model: GEMINI_MODEL } : null;
 }
 
-const TIER_MODEL: Record<string, string> = {
-  sprout: SPROUT_MODEL,
-  bud: BUD_MODEL,
-  bloom: BLOOM_MODEL,
-};
-
-// Every tier tries its own primary model first, falling back to sonar if
-// that request fails — canopy keeps its existing Gemini-first behavior. A
-// fallback beats failing the request outright, and costs nothing when sonar
-// is unavailable since that request fails fast.
 function providersFor(tier: string): Provider[] {
-  const sonar = aquaProvider(SONAR_MODEL);
-  const primary = tier === 'canopy' ? geminiProvider() : aquaProvider(TIER_MODEL[tier]);
-  return [primary, sonar].filter((p): p is Provider => p !== null);
+  const chain = (TIER_CHAINS[tier] ?? TIER_CHAINS[DEFAULT_TIER]).map((model) => aquaProvider(model));
+  const first = tier === 'canopy' ? geminiProvider() : null;
+  return [first, ...chain].filter((p): p is Provider => p !== null);
+}
+
+interface CallResult {
+  response: Response | null;
+  failure: string;
 }
 
 async function callProvider(
   provider: Provider,
   messages: unknown,
   maxTokens: number | undefined
-): Promise<Response | null> {
+): Promise<CallResult> {
   try {
     const upstream = await fetch(`${provider.baseUrl}/chat/completions`, {
       method: 'POST',
@@ -107,9 +111,10 @@ async function callProvider(
         ...(maxTokens ? { max_tokens: maxTokens } : {}),
       }),
     });
-    return upstream.ok && upstream.body ? upstream : null;
+    if (upstream.ok && upstream.body) return { response: upstream, failure: '' };
+    return { response: null, failure: `${provider.model}:${upstream.status}` };
   } catch {
-    return null;
+    return { response: null, failure: `${provider.model}:network` };
   }
 }
 
@@ -182,13 +187,20 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   let upstream: Response | null = null;
+  const failures: string[] = [];
   for (const provider of providers) {
-    upstream = await callProvider(provider, body.messages, maxTokens);
-    if (upstream) break;
+    const result = await callProvider(provider, body.messages, maxTokens);
+    if (result.response) {
+      upstream = result.response;
+      break;
+    }
+    failures.push(result.failure);
   }
 
   if (!upstream) {
-    return new Response(JSON.stringify({ error: 'Cloud AI request failed.' }), {
+    // Model names and HTTP statuses only, never keys or URLs. Makes the next
+    // outage diagnosable from the browser's network tab.
+    return new Response(JSON.stringify({ error: 'Cloud AI request failed.', detail: failures }), {
       status: 502,
       headers: { 'content-type': 'application/json' },
     });
