@@ -6,8 +6,16 @@ import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
 // app at all. The real model stays an implementation detail (still
 // disclosed honestly on the how-it-works page) — branded as "Bloom" in the
 // UI, never named directly.
-const LOCAL_MODEL_ID = 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
-export const LOCAL_MODEL_APPROX_SIZE_GB = 1.7;
+//
+// The model is sized to the device: phones and low-memory machines get the 1B
+// model (under 1GB of GPU memory), because the 3B one needs over 2GB and a
+// mobile browser tab is killed long before that. Devices without half-float
+// shader support (common on iOS Safari) get the matching f32 build.
+const MODEL_3B_F16 = 'Llama-3.2-3B-Instruct-q4f16_1-MLC';
+const MODEL_3B_F32 = 'Llama-3.2-3B-Instruct-q4f32_1-MLC';
+const MODEL_1B_F16 = 'Llama-3.2-1B-Instruct-q4f16_1-MLC';
+const MODEL_1B_F32 = 'Llama-3.2-1B-Instruct-q4f32_1-MLC';
+export const LOCAL_MODEL_APPROX_SIZE_GB = isSmallDevice() ? 0.9 : 1.7;
 
 export type EngineStatus = 'idle' | 'loading' | 'ready' | 'unsupported' | 'error';
 
@@ -59,6 +67,31 @@ export function subscribeToEngineStatus(listener: StatusListener): () => void {
   return () => listeners.delete(listener);
 }
 
+function isSmallDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const memoryGB = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  if (typeof memoryGB === 'number') return memoryGB < 6;
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(pointer: coarse)').matches
+    : false;
+}
+
+async function supportsShaderF16(): Promise<boolean> {
+  try {
+    const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<{ features: Set<string> } | null> } }).gpu;
+    const adapter = await gpu?.requestAdapter();
+    return Boolean(adapter?.features.has('shader-f16'));
+  } catch {
+    return false;
+  }
+}
+
+async function pickModelId(): Promise<string> {
+  const f16 = await supportsShaderF16();
+  if (isSmallDevice()) return f16 ? MODEL_1B_F16 : MODEL_1B_F32;
+  return f16 ? MODEL_3B_F16 : MODEL_3B_F32;
+}
+
 export function isWebGPUSupported(): boolean {
   return typeof navigator !== 'undefined' && 'gpu' in navigator;
 }
@@ -102,9 +135,9 @@ export function loadEngine(): void {
   setStatus('loading', 0, '');
   armStallTimer(generation);
 
-  import('@mlc-ai/web-llm')
-    .then(({ CreateMLCEngine }) =>
-      CreateMLCEngine(LOCAL_MODEL_ID, {
+  Promise.all([import('@mlc-ai/web-llm'), pickModelId()])
+    .then(([{ CreateMLCEngine }, modelId]) =>
+      CreateMLCEngine(modelId, {
         initProgressCallback: (report: InitProgressReport) => {
           if (loadGeneration !== generation) return;
           armStallTimer(generation);
