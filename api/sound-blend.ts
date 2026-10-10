@@ -48,9 +48,11 @@ function parseBlend(text: string): Record<SoundLayer, number> | null {
 
   for (const layer of SOUND_LAYERS) {
     const value = record[layer];
-    if (typeof value !== 'number' || Number.isNaN(value)) return null;
-    blend[layer] = Math.max(0, Math.min(1, value));
+    // Models sometimes return numbers as strings or omit a silent layer.
+    const num = typeof value === 'string' ? Number(value) : value;
+    blend[layer] = typeof num === 'number' && !Number.isNaN(num) ? Math.max(0, Math.min(1, num)) : 0;
   }
+  if (Object.values(blend).every((v) => v === 0)) return null;
 
   return blend;
 }

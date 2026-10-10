@@ -69,6 +69,7 @@ function createFakeAudioParam(initial: number) {
     value: initial,
     setValueAtTime: () => {},
     linearRampToValueAtTime: () => {},
+    setTargetAtTime: () => {},
   };
 }
 
@@ -95,7 +96,15 @@ class FakeAudioContext {
 
   createBuffer(_channels: number, length: number) {
     const data = new Float32Array(length);
-    return { getChannelData: () => data };
+    return { getChannelData: () => data, duration: length / 44100 };
+  }
+
+  createStereoPanner() {
+    return { ...createFakeAudioNode(), pan: createFakeAudioParam(0) };
+  }
+
+  createConvolver() {
+    return { ...createFakeAudioNode(), buffer: null };
   }
 
   createBufferSource() {

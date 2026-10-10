@@ -83,7 +83,7 @@ describe('api/sound-blend', () => {
     expect(res.status).toBe(502);
   });
 
-  it('returns 502 when the model response is missing one of the four keys', async () => {
+  it('treats a missing key as silent instead of failing', async () => {
     vi.spyOn(global, 'fetch').mockImplementation(async (input) => {
       const url = urlOf(input);
       if (url.startsWith(OPENAI_BASE_URL)) return completionResponse('{"ocean": 0.5, "rain": 0.5, "birds": 0.1}');
@@ -91,7 +91,8 @@ describe('api/sound-blend', () => {
     });
 
     const res = await handler(makeRequest({ description: 'a stormy ocean at night' }));
-    expect(res.status).toBe(502);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ocean: 0.5, rain: 0.5, birds: 0.1, breeze: 0 });
   });
 
   it('returns 400 for a missing description', async () => {

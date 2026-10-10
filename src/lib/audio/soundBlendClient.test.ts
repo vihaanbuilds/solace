@@ -21,8 +21,22 @@ describe('requestSoundBlend', () => {
     expect(JSON.parse(init!.body as string)).toEqual({ description: 'a calm ocean morning' });
   });
 
-  it('throws when the request fails', async () => {
+  it('falls back to a local interpretation when the request fails', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('error', { status: 502 }));
-    await expect(requestSoundBlend('anything')).rejects.toThrow();
+    const blend = await requestSoundBlend('a stormy ocean at night');
+    expect(blend.ocean).toBeGreaterThan(0);
+    expect(blend.rain).toBeGreaterThan(0.5);
+  });
+
+  it('falls back when fetch itself rejects (no /api in local dev)', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network'));
+    const blend = await requestSoundBlend('quiet forest morning');
+    expect(blend.birds).toBeGreaterThan(0);
+  });
+
+  it('returns a gentle mix for a description with no recognisable keywords', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network'));
+    const blend = await requestSoundBlend('zzz qqq');
+    expect(Object.values(blend).some((v) => v > 0)).toBe(true);
   });
 });
