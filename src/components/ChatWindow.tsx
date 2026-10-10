@@ -1,3 +1,4 @@
+import { stripDashes } from '../lib/text/noDashes';
 import { useEffect, useRef, useState } from 'react';
 import { MessageBubble } from './MessageBubble';
 import { ModeSelector } from './ModeSelector';
@@ -35,7 +36,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
   const [tier, setTier] = useState<ChatTier>(() => loadAiTier() ?? 'bud');
   const [pendingImages, setPendingImages] = useState<string[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
-  // Images are shown for the current session only, keyed by message id —
+  // Images are shown for the current session only, keyed by message id , 
   // they're deliberately not written into StoredMessage/localStorage, since
   // even resized photos could quickly eat through the origin's storage
   // quota and break chat persistence entirely for every conversation, not
@@ -109,7 +110,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
       mode,
       history,
       (partial) => {
-        setPendingBotText(partial);
+        setPendingBotText(stripDashes(partial));
       },
       age,
       images
@@ -118,7 +119,7 @@ export function ChatWindow({ messages, onMessagesChange }: ChatWindowProps) {
     const botMessage: StoredMessage = {
       id: createId(),
       sender: 'bot',
-      text: reply.text,
+      text: stripDashes(reply.text),
       isCrisis: reply.isCrisis,
       timestamp: Date.now(),
     };

@@ -23,7 +23,7 @@ function buildTranscript(conversation: Conversation): string {
   const lines = conversation.messages.map(
     (m) => `${m.sender === 'user' ? 'Me' : 'Solace'}: ${m.text}`
   );
-  return [`Solace conversation — ${conversation.title}`, '', ...lines].join('\n');
+  return [`Solace conversation, ${conversation.title}`, '', ...lines].join('\n');
 }
 
 function matchesQuery(conversation: Conversation, query: string): boolean {
@@ -140,7 +140,7 @@ export function Sidebar({
   async function handleShare(conversation: Conversation) {
     setOpenMenuId(null);
     const transcript = buildTranscript(conversation);
-    const shareData = { title: `Solace — ${conversation.title}`, text: transcript };
+    const shareData = { title: `Solace, ${conversation.title}`, text: transcript };
 
     if (navigator.share) {
       try {
@@ -156,7 +156,7 @@ export function Sidebar({
     if (navigator.clipboard?.writeText) {
       try {
         await navigator.clipboard.writeText(transcript);
-        window.alert("Sharing isn't supported in this browser — copied the conversation to your clipboard instead.");
+        window.alert("Sharing isn't supported in this browser, copied the conversation to your clipboard instead.");
         return;
       } catch {
         // fall through to the final alert below

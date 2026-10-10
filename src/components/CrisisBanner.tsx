@@ -8,10 +8,10 @@ export function CrisisBanner() {
         to face this alone.
       </p>
       <p>
-        <PhoneIcon /> <strong>988 Suicide &amp; Crisis Lifeline</strong> — call or text 988
+        <PhoneIcon /> <strong>988 Suicide &amp; Crisis Lifeline</strong>, call or text 988
       </p>
       <p>
-        <ChatBubbleIcon /> <strong>Crisis Text Line</strong> — text HOME to 741741
+        <ChatBubbleIcon /> <strong>Crisis Text Line</strong>, text HOME to 741741
       </p>
     </div>
   );

@@ -24,17 +24,17 @@ import { ChatTier, loadBloomLocalMode, saveAiTier, saveBloomLocalMode, loadAiTie
 
 function describeAiStatus(tier: ChatTier, status: EngineStatus, bloomLocal: boolean): string {
   if (tier === 'bloom' && bloomLocal) {
-    if (status === 'ready') return 'Active — running Bloom locally on your device. No daily limit in this mode.';
+    if (status === 'ready') return 'Active, running Bloom locally on your device. No daily limit in this mode.';
     if (status === 'loading') {
-      return getEngineStatusText() || "Downloading — this usually takes 1–3 minutes. You'll get Bloom's cloud replies until then.";
+      return getEngineStatusText() || "Downloading, this usually takes 1-3 minutes. You'll get Bloom's cloud replies until then.";
     }
     if (status === 'error') {
-      return getEngineStatusText() || "That didn't finish loading. Using Bloom's cloud replies instead — try again below, or turn local mode off.";
+      return getEngineStatusText() || "That didn't finish loading. Using Bloom's cloud replies instead, try again below, or turn local mode off.";
     }
   }
   const remaining = getMessagesRemainingToday(tier);
   const limit = getDailyLimit(tier);
-  return `Active — using ${TIERS[tier].name} ${TIERS[tier].version}. Your messages are sent to a server to generate replies. ${remaining} of ${limit} messages left today.`;
+  return `Active, using ${TIERS[tier].name} ${TIERS[tier].version}. Your messages are sent to a server to generate replies. ${remaining} of ${limit} messages left today.`;
 }
 
 interface SettingsModalProps {
@@ -72,7 +72,7 @@ export function SettingsModal({
 
   useEffect(() => subscribeToEngineStatus((status) => setEngineStatus(status)), []);
 
-  // Switching tiers never touches the engine — only Bloom's local-mode
+  // Switching tiers never touches the engine, only Bloom's local-mode
   // toggle does, since every tier is cloud-backed by default now.
   function handleSelectTier(tier: ChatTier) {
     saveAiTier(tier);
@@ -158,7 +158,7 @@ export function SettingsModal({
                       </label>
                       <p className="model-picker-toggle-warning">
                         Downloads about {LOCAL_MODEL_APPROX_SIZE_GB}GB and needs a genuinely
-                        powerful phone or computer — it may not work on every device
+                        powerful phone or computer, it may not work on every device
                         {deviceSeemsUnderpowered() ? ', and this device might struggle with it' : ''}.
                         Nothing you type leaves your device in this mode, and it works offline
                         afterward.
@@ -166,7 +166,7 @@ export function SettingsModal({
                     </>
                   ) : (
                     <p className="model-picker-toggle-warning">
-                      Local mode isn't supported in this browser — Bloom uses the cloud model
+                      Local mode isn't supported in this browser, Bloom uses the cloud model
                       here instead.
                     </p>
                   )}

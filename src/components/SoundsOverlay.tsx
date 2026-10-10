@@ -31,7 +31,7 @@ export function SoundsOverlay({ onClose }: SoundsOverlayProps) {
   const [volumes, setVolumes] = useState<LayerVolumes>(() => getVolumes());
   const [description, setDescription] = useState(() => loadSoundDescription());
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
-  // Computed once at mount, not re-derived on every render — once the user
+  // Computed once at mount, not re-derived on every render, once the user
   // acts (taps resume, or toggles anything), isPlaying() becomes true and
   // this affordance should simply disappear on the next volumes update.
   const [savedMix] = useState(() => loadSoundMix());
@@ -141,7 +141,7 @@ export function SoundsOverlay({ onClose }: SoundsOverlayProps) {
           </button>
         </form>
         {status === 'error' && (
-          <p className="sounds-error">Couldn't create that sound — try describing it differently.</p>
+          <p className="sounds-error">Couldn't create that sound, try describing it differently.</p>
         )}
 
         <button className="settings-danger-btn sounds-stop-all" onClick={stopAll}>

@@ -63,7 +63,7 @@ function getLimitReachedReply(tier: ChatTier): string {
       : tier === 'bloom'
         ? `it resets tomorrow, you can switch to ${TIERS.sprout.name} for a more lenient limit, or turn on Bloom's on-device mode in the model menu for unlimited replies on your own device`
         : `it resets tomorrow, or you can switch to ${TIERS.sprout.name} for a more lenient daily limit`;
-  return `You've reached today's message limit for ${name} — ${suggestion}. I'm still here for you with quick, ready-made support in the meantime — what's on your mind?`;
+  return `You've reached today's message limit for ${name}, ${suggestion}. I'm still here for you with quick, ready-made support in the meantime, what's on your mind?`;
 }
 
 export async function getResponse(
@@ -87,7 +87,7 @@ export async function getResponse(
   }
 
   const tier = loadAiTier() ?? DEFAULT_TIER;
-  // Every tier is cloud-backed by default — Bloom is the sole exception,
+  // Every tier is cloud-backed by default, Bloom is the sole exception,
   // and only once the user has explicitly flipped its local-mode toggle on
   // and the on-device engine has actually finished loading.
   const useLocal = tier === 'bloom' && loadBloomLocalMode() && getEngineStatus() === 'ready';
@@ -112,7 +112,7 @@ export async function getResponse(
       // Fall through to the deterministic fallback on any AI failure.
     }
   } else if (hasReachedDailyLimit(tier)) {
-    // Explain the cap exactly once when it's first hit — every attempt
+    // Explain the cap exactly once when it's first hit, every attempt
     // after that stays silent about it and just uses the normal
     // deterministic fallback below, so the app doesn't repeat itself.
     if (shouldShowLimitNotice(tier)) {
@@ -126,7 +126,7 @@ export async function getResponse(
         ...toChatMessages(),
         { role: 'user', content: message },
       ];
-      // Only Canopy supports images — dropped for every other tier even if
+      // Only Canopy supports images, dropped for every other tier even if
       // somehow passed in, since their prompts never mention images at all.
       const text = await generateCloudReply(messages, tier, tier === 'canopy' ? images : [], onToken);
       if (text) {
@@ -134,7 +134,7 @@ export async function getResponse(
         return { text, isCrisis: false, detection, source: 'ai' };
       }
     } catch {
-      // Fall through to the deterministic fallback on any cloud failure —
+      // Fall through to the deterministic fallback on any cloud failure , 
       // a failed attempt doesn't cost part of the daily budget.
     }
   }

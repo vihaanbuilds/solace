@@ -1,3 +1,4 @@
+import { stripDashes } from '../lib/text/noDashes';
 import { StoredMessage } from '../lib/storage';
 
 interface MessageBubbleProps {
@@ -23,7 +24,7 @@ export function MessageBubble({ message, pending = false, images }: MessageBubbl
             ))}
           </div>
         )}
-        {pending && message.text === '' ? 'Solace is thinking…' : message.text}
+        {pending && message.text === '' ? 'Solace is thinking…' : isBot ? stripDashes(message.text) : message.text}
       </div>
     </div>
   );

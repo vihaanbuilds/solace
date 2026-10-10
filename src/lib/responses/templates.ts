@@ -4,8 +4,8 @@ export type Mode = 'comforter' | 'uplifter' | 'reflector';
 
 type TemplateMap = Record<Emotion, Record<Mode, string[]>>;
 
-// This fallback engine is what a meaningful share of users actually get —
-// not every device can run the on-device AI model — so its wording leans on
+// This fallback engine is what a meaningful share of users actually get , 
+// not every device can run the on-device AI model, so its wording leans on
 // a handful of well-established therapeutic principles rather than generic
 // reassurance:
 // - Unconditional positive regard & congruence (Rogers, "On Becoming a
@@ -25,11 +25,11 @@ type TemplateMap = Record<Emotion, Record<Mode, string[]>>;
 export const RESPONSE_TEMPLATES: TemplateMap = {
   sadness: {
     comforter: [
-      "That sounds heavy, and it makes complete sense that you'd feel this way. I'm right here with you — what's been happening?",
+      "That sounds heavy, and it makes complete sense that you'd feel this way. I'm right here with you, what's been happening?",
       "You don't have to justify this sadness to me, or to anyone else. What's been sitting heaviest on you?",
       "Thank you for letting me see this side of things. What's underneath it?",
       "It's okay to just feel low right now, without rushing to fix it. What's been going on?",
-      "I'm not going anywhere, and neither is this feeling right this second — so let's just sit in it together. What happened?",
+      "I'm not going anywhere, and neither is this feeling right this second, so let's just sit in it together. What happened?",
       "Whatever's making you feel this way is allowed to matter, exactly as much as it does to you. Want to tell me more?",
     ],
     uplifter: [
@@ -37,12 +37,12 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
       "You're allowed to feel this without rushing toward better. What's been happening?",
       "Even on a day this heavy, you're still here talking about it, and that counts for something. What's going on?",
       "This won't stay at exactly this intensity forever, even though it's hard to believe that today. What's on your mind?",
-      "You're not failing at anything by feeling sad — you're just being honest. What's been the hardest part?",
+      "You're not failing at anything by feeling sad, you're just being honest. What's been the hardest part?",
       "Naming this out loud, the way you just did, is its own kind of strength. What's been going on?",
     ],
     reflector: [
       "What do you think is underneath this sadness right now?",
-      "Where do you notice this feeling most — your chest, your energy, your thoughts?",
+      "Where do you notice this feeling most, your chest, your energy, your thoughts?",
       "Was there a specific moment that brought this on, or has it been building quietly?",
       "If this sadness could put itself into words, what do you think it would say?",
       "What's different about today that's making this feel especially present?",
@@ -52,7 +52,7 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
   grief: {
     comforter: [
       "I'm so sorry. A loss like that leaves a real mark, and there's no timeline you're supposed to be on. Do you want to tell me about them?",
-      "However this is showing up for you right now — however messy or quiet — it's allowed to look like that. What's been on your mind?",
+      "However this is showing up for you right now, however messy or quiet, it's allowed to look like that. What's been on your mind?",
       "That loss is still very present for you, and that makes complete sense. What's been coming up?",
       "I'm holding space for you and for whoever you lost. Do you want to tell me about them, whenever you're ready?",
       "Grief doesn't follow rules, and you don't owe anyone a version of it that looks a certain way. What's been the hardest part lately?",
@@ -62,13 +62,13 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
       "What you lost mattered, and carrying it forward is one way of honoring that. What do you want people to remember about them?",
       "This kind of grief doesn't move fast, but you're not moving through it by yourself. What's been helping, even a little?",
       "Missing someone this much is really just love with nowhere to go right now. What's been on your mind about them?",
-      "It's okay for grief to resurface out of nowhere — that's not you moving backward. What brought it up today?",
+      "It's okay for grief to resurface out of nowhere, that's not you moving backward. What brought it up today?",
       "You get to hold both the loss and the good memories at the same time, without one canceling out the other. What's a memory that's stayed with you?",
-      "Carrying this doesn't make you fragile — it makes you someone who loved for real. What's been hardest to carry?",
+      "Carrying this doesn't make you fragile, it makes you someone who loved for real. What's been hardest to carry?",
     ],
     reflector: [
       "What memory of them has been closest to the surface lately?",
-      "What does missing them feel like in your body most days — heavy, hollow, restless?",
+      "What does missing them feel like in your body most days, heavy, hollow, restless?",
       "Is there something you wish you'd said, or something you're glad you did?",
       "Is there a particular time or place where this grief shows up strongest?",
       "What would you want people to understand about them that they might not know?",
@@ -78,15 +78,15 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
   anger: {
     comforter: [
       "That sounds genuinely frustrating, and you don't need to smooth it over for me. What happened?",
-      "Your anger makes sense here — something happened that shouldn't have. Do you want to walk me through it?",
+      "Your anger makes sense here, something happened that shouldn't have. Do you want to walk me through it?",
       "I hear how worked up this has gotten you, and that reaction makes sense given what happened. What's going on?",
       "You don't have to justify being angry to me. What's been building up?",
       "That really got to you, and understandably so. What happened?",
-      "I'm right here — you can be as upset as you need to be. Want to talk through it?",
+      "I'm right here, you can be as upset as you need to be. Want to talk through it?",
     ],
     uplifter: [
       "That fire in you can be pointed somewhere useful once it's had room to exist first. What happened?",
-      "Being angry about this doesn't make you difficult — it makes you someone who noticed something unfair. What's going on?",
+      "Being angry about this doesn't make you difficult, it makes you someone who noticed something unfair. What's going on?",
       "That anger is pointing at something that mattered to you. What was it?",
       "You don't need this figured out yet. What's on your mind about it?",
       "Feeling upset about something unfair is a sign you know what you deserve. What happened?",
@@ -98,12 +98,12 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
       "Is this more about what just happened, or something that's been building for a while?",
       "If you could name what you actually need right now, what would it be?",
       "Who or what is this anger really aimed at?",
-      "Is there a softer feeling underneath the anger — hurt, disappointment, fear?",
+      "Is there a softer feeling underneath the anger, hurt, disappointment, fear?",
     ],
   },
   happiness: {
     comforter: [
-      "I'm really glad to hear that — you deserve this. What happened?",
+      "I'm really glad to hear that, you deserve this. What happened?",
       "That sounds wonderful, and I'm glad you brought it here to share. What's got you feeling this way?",
       "This is lovely to hear about. What made today feel this good?",
       "It's genuinely nice when things line up like this. What happened?",
@@ -111,7 +111,7 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
       "That sounds like a real, good moment. What led up to it?",
     ],
     uplifter: [
-      "This is worth celebrating properly — what made it happen?",
+      "This is worth celebrating properly, what made it happen?",
       "Hold onto this feeling for a second before it rushes past you. What led up to it?",
       "Look at this! What's been going on?",
       "This deserves more than a passing mention. What happened?",
@@ -122,14 +122,14 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
       "What part of this feels best to you?",
       "What made today different from the rest?",
       "What led up to this moment for you?",
-      "Is this the kind of happiness you'd want more of — and if so, what would that take?",
+      "Is this the kind of happiness you'd want more of, and if so, what would that take?",
       "Who do you want to tell about this?",
       "What does this moment tell you about what actually matters to you?",
     ],
   },
   jealousy: {
     comforter: [
-      "Wanting something someone else has doesn't make you a bad person — it makes you human. What's been happening?",
+      "Wanting something someone else has doesn't make you a bad person, it makes you human. What's been happening?",
       "That comparison feeling is genuinely uncomfortable to sit with. What's been bringing it up?",
       "This is more common than you'd think, and it doesn't make you a bad friend. What's going on?",
       "It's hard watching things look easier for someone else. What's been on your mind about it?",
@@ -148,7 +148,7 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
       "What is it about their situation that stands out to you most?",
       "Is this more about them, or about something you're missing right now?",
       "If you had what they have, what do you think would actually feel different?",
-      "Underneath the comparison, what do you think you're really needing right now — recognition, security, progress?",
+      "Underneath the comparison, what do you think you're really needing right now, recognition, security, progress?",
       "What would it look like to measure today against your own yesterday instead?",
       "Has this feeling come up before with this person, or does it feel new?",
     ],
@@ -172,9 +172,9 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
     ],
     reflector: [
       "What's the specific 'what if' that keeps looping?",
-      "When did you first notice this worry today — was there a trigger?",
+      "When did you first notice this worry today, was there a trigger?",
       "Does it feel like it's about one thing, or everything at once?",
-      "Where do you feel this in your body right now — chest, stomach, somewhere else?",
+      "Where do you feel this in your body right now, chest, stomach, somewhere else?",
       "What would it feel like if this worry turned down by just ten percent?",
       "If you could set this worry down for one minute, what would you notice instead?",
     ],
@@ -194,7 +194,7 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
       "Loneliness tends to lie about how permanent it is. What's brought this on?",
       "You showing up here already breaks the pattern of facing this completely alone. What's going on?",
       "There are people who'd want to know you're feeling this way, even if it doesn't feel like it right now. What's been happening?",
-      "Feeling disconnected right now doesn't mean you're unlovable or forgettable — it means you're going through something. What's on your mind?",
+      "Feeling disconnected right now doesn't mean you're unlovable or forgettable, it means you're going through something. What's on your mind?",
     ],
     reflector: [
       "When does this loneliness hit hardest for you?",
@@ -238,7 +238,7 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
       "Carrying guilt like this is genuinely exhausting. What's been on your mind about it?",
       "I hear how much this is weighing on you. What happened?",
       "Feeling bad about this shows you care, even though it's an uncomfortable feeling to sit inside. What's the situation?",
-      "You're allowed to feel guilty and still be a good person — those aren't opposites. Want to tell me more?",
+      "You're allowed to feel guilty and still be a good person, those aren't opposites. Want to tell me more?",
     ],
     uplifter: [
       "Noticing this and caring about it already says something good about you. What happened?",
@@ -260,18 +260,18 @@ export const RESPONSE_TEMPLATES: TemplateMap = {
 };
 
 export const CLARIFYING_QUESTIONS = [
-  "There's a lot going on in what you just said — can you tell me a bit more about what you're actually feeling?",
-  "I want to make sure I'm understanding this right — what's the feeling underneath all of it?",
-  "I'm listening, and I want to get this right — can you say a little more about what's going on?",
+  "There's a lot going on in what you just said, can you tell me a bit more about what you're actually feeling?",
+  "I want to make sure I'm understanding this right, what's the feeling underneath all of it?",
+  "I'm listening, and I want to get this right, can you say a little more about what's going on?",
   "What's weighing on you most right now, underneath everything else?",
   "Tell me more, if you're up for it. I'm not going anywhere.",
-  "I'm not sure I'm reading this correctly yet — what would you call this feeling?",
+  "I'm not sure I'm reading this correctly yet, what would you call this feeling?",
 ];
 
 export const CRISIS_RESPONSES: Record<Mode, string[]> = {
   comforter: [
     "I'm really glad you told me that. That's an enormous amount of pain to be carrying, and you don't have to carry it by yourself. Can you tell me more about what's going on?",
-    "Thank you for saying that out loud — that takes real courage, and I'm staying right here with you. What's been happening?",
+    "Thank you for saying that out loud, that takes real courage, and I'm staying right here with you. What's been happening?",
     "That sounds like more pain than anyone should have to sit with alone. I'm here, and I'm listening. Can you tell me more?",
   ],
   uplifter: [
@@ -280,65 +280,65 @@ export const CRISIS_RESPONSES: Record<Mode, string[]> = {
     "You reaching out right now, even just to me, is a real and important step. What's been going on for you?",
   ],
   reflector: [
-    "I hear you, and I want to understand more — what's been happening that's brought you to this point?",
+    "I hear you, and I want to understand more, what's been happening that's brought you to this point?",
     "That's an enormous amount to be carrying. Can you tell me more about what's led you here?",
-    "I want to understand what you're going through right now — what's been happening lately?",
+    "I want to understand what you're going through right now, what's been happening lately?",
   ],
 };
 
 export const GREETING_RESPONSES: Record<Mode, string[]> = {
   comforter: [
-    "Hi there. I'm glad you're here — how are you doing today?",
+    "Hi there. I'm glad you're here, how are you doing today?",
     "Hey! Good to see you. What's on your mind?",
-    "Hello — I'm here and actually listening. How are you feeling right now?",
-    "Hi. Take your time — is everything okay, or did you just want to talk?",
+    "Hello, I'm here and actually listening. How are you feeling right now?",
+    "Hi. Take your time, is everything okay, or did you just want to talk?",
     "Hey there. However you're doing today, I'm glad you stopped by.",
   ],
   uplifter: [
-    "Hey! Glad you're here — what's going on with you today?",
+    "Hey! Glad you're here, what's going on with you today?",
     "Hi there! How's your day treating you so far?",
     "Hello! Whatever's on your mind, I'm ready to hear it.",
-    "Hey — good to see you. What's been on your mind lately?",
+    "Hey, good to see you. What's been on your mind lately?",
     "Hi! You showing up here already counts for something. What's up?",
   ],
   reflector: [
-    "Hi — what's been on your mind lately?",
+    "Hi, what's been on your mind lately?",
     "Hello. What brought you here today?",
     "Hey there. What would be helpful to talk through right now?",
     "Hi. Is there something specific you've been thinking about, or just wanted to check in?",
-    "Hello — what's going on for you today?",
+    "Hello, what's going on for you today?",
   ],
 };
 
 export const OFF_TOPIC_RESPONSES: Record<Mode, string[]> = {
   comforter: [
-    "I'm only made to provide emotional support, not to answer questions or do calculations or homework — but I'm here if something's on your mind.",
-    "I can't help with that — I'm only built for emotional support, not facts or schoolwork. Is everything okay?",
+    "I'm only made to provide emotional support, not to answer questions or do calculations or homework, but I'm here if something's on your mind.",
+    "I can't help with that, I'm only built for emotional support, not facts or schoolwork. Is everything okay?",
     "That's outside what I do. I'm only here to support you emotionally, not answer or solve things like that.",
   ],
   uplifter: [
-    "I'm only made to provide emotional support, not to answer questions or do calculations or homework — but if something's been on your mind, I'd love to hear it.",
-    "I can't help with that one — I'm only built for emotional support, not facts or schoolwork. What's actually going on with you today?",
+    "I'm only made to provide emotional support, not to answer questions or do calculations or homework, but if something's been on your mind, I'd love to hear it.",
+    "I can't help with that one, I'm only built for emotional support, not facts or schoolwork. What's actually going on with you today?",
     "That's not something I do. I'm only here for the feelings side of things, not answers or homework.",
   ],
   reflector: [
-    "I'm only made to provide emotional support, not to answer questions or do calculations or homework — what's actually on your mind?",
-    "I can't help with that — I'm only built for emotional support, not facts or schoolwork. What brought you here today?",
+    "I'm only made to provide emotional support, not to answer questions or do calculations or homework, what's actually on your mind?",
+    "I can't help with that, I'm only built for emotional support, not facts or schoolwork. What brought you here today?",
     "That falls outside what I do. I'm only here to help you think through what you're feeling, not solve or answer things like that.",
   ],
 };
 
 export const IDENTITY_RESPONSES: Record<Mode, string[]> = {
   comforter: [
-    "I'm Solace — I'm here to listen and support you emotionally, not to answer questions about myself. How are you doing?",
+    "I'm Solace, I'm here to listen and support you emotionally, not to answer questions about myself. How are you doing?",
     "I'm just a supportive companion, here to listen. What's going on with you?",
   ],
   uplifter: [
-    "I'm Solace — built to be here for you emotionally, not much else. What's on your mind today?",
+    "I'm Solace, built to be here for you emotionally, not much else. What's on your mind today?",
     "I'm just here to support you, not to talk about myself. What's going on with you?",
   ],
   reflector: [
-    "I'm Solace — a companion built to help you process how you're feeling, not to answer things about myself. What's on your mind?",
+    "I'm Solace, a companion built to help you process how you're feeling, not to answer things about myself. What's on your mind?",
     "I'm just here to listen and help you think things through. What brought you here today?",
   ],
 };

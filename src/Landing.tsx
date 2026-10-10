@@ -40,7 +40,7 @@ export function Landing() {
 
   async function handleShare() {
     const shareData = {
-      title: 'Solace — a companion that actually listens',
+      title: 'Solace, a companion that actually listens',
       text: 'Solace is a private, always-on companion that listens for how you’re feeling and responds with real empathy. Nothing you say ever leaves your browser.',
       url: window.location.href,
     };
@@ -86,7 +86,7 @@ export function Landing() {
           <h1 className="landing-headline">Meet Solace</h1>
           <p className="landing-subhead">
             A private, always-on companion that listens for how you're feeling and responds
-            with real empathy — comforting, uplifting, or reflective, whichever you need
+            with real empathy, comforting, uplifting, or reflective, whichever you need
             right now. It runs entirely in your browser: nothing you say is ever sent to a
             server.
           </p>
@@ -123,11 +123,11 @@ export function Landing() {
         <section className="landing-statement">
           <p>
             <strong>Why don't we get straight to the point?........</strong> A lot of things
-            say they understand you and don't — a script that nods along, a chatbot that
+            say they understand you and don't, a script that nods along, a chatbot that
             changes the subject, a friend who means well but just wants you to feel better
             fast. Solace was built to actually do the thing everyone else claims to: read
             what you're really saying, sit with it instead of rushing past it, and respond
-            like it's actually paying attention — because it is. No lectures. No "everything
+            like it's actually paying attention, because it is. No lectures. No "everything
             happens for a reason." No pretending to get it while quietly not. Just steady,
             honest support, especially on the nights it's hardest to find anywhere else.
           </p>

@@ -62,7 +62,7 @@ if (!window.matchMedia) {
 
 // jsdom does not implement the Web Audio API at all. This is a minimal fake
 // AudioContext with just enough surface for src/lib/audio/soundSynth.ts to
-// run without throwing — connections and audio output are no-ops, since
+// run without throwing, connections and audio output are no-ops, since
 // tests only need this code path not to crash, not to produce real sound.
 function createFakeAudioParam(initial: number) {
   return {
@@ -76,7 +76,7 @@ function createFakeAudioParam(initial: number) {
 function createFakeAudioNode() {
   return {
     // Real AudioNode.connect() returns the destination node so calls can
-    // chain (`a.connect(b).connect(c)`) — soundSynth.ts relies on that, so
+    // chain (`a.connect(b).connect(c)`), soundSynth.ts relies on that, so
     // the fake must too, or the second .connect() in a chain throws.
     connect: (target: unknown) => target,
     disconnect: () => {},

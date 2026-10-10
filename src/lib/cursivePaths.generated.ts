@@ -1,4 +1,4 @@
-// GENERATED FILE — do not edit by hand.
+// GENERATED FILE, do not edit by hand.
 // Produced by scripts/generate-cursive-paths.mjs from Alex Brush (SIL OFL 1.1).
 // Re-run that script if the source text ever changes.
 export interface CursivePath {

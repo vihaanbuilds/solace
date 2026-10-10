@@ -1,4 +1,4 @@
-// All direct Web Audio API usage lives in this one file — soundMixer.ts and
+// All direct Web Audio API usage lives in this one file, soundMixer.ts and
 // everything above it only ever touches the LayerController interface, so
 // it can be fully mocked in tests without needing a real AudioContext.
 
@@ -17,7 +17,7 @@ export function isAudioSupported(): boolean {
 let sharedContext: AudioContext | null = null;
 
 // Created lazily on first call (i.e. the first time a layer is actually
-// toggled on by a user gesture), never at module load — browsers block
+// toggled on by a user gesture), never at module load, browsers block
 // audio autoplay without one.
 export function getAudioContext(): AudioContext {
   if (!sharedContext) {
@@ -111,7 +111,7 @@ function createTimers() {
 }
 
 // Shared trim applied after every layer's own volumeGain, before the
-// hardware destination — headroom against clipping when several layers are
+// hardware destination, headroom against clipping when several layers are
 // stacked at once.
 const MASTER_TRIM = 0.75;
 
@@ -133,7 +133,7 @@ function createVolumeGain(context: AudioContext): GainNode {
   return gain;
 }
 
-// Volume changes ramp instead of jumping instantly — a plain `gain.value =`
+// Volume changes ramp instead of jumping instantly, a plain `gain.value =`
 // assignment is an audible click, and setVolume runs on every slider-drag
 // tick. Stop ramps to silence first and only disconnects once the fade has
 // finished.
@@ -159,7 +159,7 @@ function makeController(context: AudioContext, volumeGain: GainNode, cleanup: ()
 // ---- Ocean ---------------------------------------------------------------
 // A faint deep bed plus two overlapping wave voices. Each wave swells in
 // (filter opening up as it builds), crests, then recedes into a soft "shhh"
-// of foam — and the next one arrives at a different, irregular time.
+// of foam, and the next one arrives at a different, irregular time.
 
 function createOceanLayer(context: AudioContext): LayerController {
   const { pink, brown } = getNoise(context);
@@ -436,7 +436,7 @@ function playNote(
 // Each song returns how long it lasted, in seconds.
 type Song = (context: AudioContext, out: AudioNode, time: number, base: number) => number;
 
-// Slow, flute-like phrase — a few glided pure notes (robin/thrush).
+// Slow, flute-like phrase, a few glided pure notes (robin/thrush).
 const whistleSong: Song = (context, out, time, base) => {
   let t = time;
   let degree = Math.floor(rand(0, 4));
@@ -484,7 +484,7 @@ const feebeeSong: Song = (context, out, time, base) => {
   return 0.85;
 };
 
-// Low, soft, slow cooing (dove) — adds depth under the bright birds.
+// Low, soft, slow cooing (dove), adds depth under the bright birds.
 const cooSong: Song = (context, out, time, base) => {
   const f = base * 0.28;
   const count = Math.floor(rand(3, 5));

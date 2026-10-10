@@ -259,7 +259,7 @@ export default function App() {
           <p className="welcome-hero">{welcomeMessage}</p>
           <p>
             Solace is a supportive companion that listens and responds to how you're
-            feeling. It's here to help you feel heard — it isn't a substitute for a real
+            feeling. It's here to help you feel heard, it isn't a substitute for a real
             person or a mental health professional.
           </p>
           <p>

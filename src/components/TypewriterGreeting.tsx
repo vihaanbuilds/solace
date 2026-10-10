@@ -6,11 +6,11 @@ function buildGreetings(name: string | null): string[] {
   const who = name ? `, ${name}` : '';
   return [
     `No judgment. I'm all ears${who}.`,
-    `Whenever you're ready${who} — I'm listening.`,
+    `Whenever you're ready${who}, I'm listening.`,
     `Say whatever's on your mind${who}. I'm here for it.`,
     `Hey${who ? who.replace(', ', ' ') : ' there'}, what's going on with you today?`,
     `I'm here${who}. No judgment, no rush.`,
-    `Talk to me${who} — I'm all ears.`,
+    `Talk to me${who}, I'm all ears.`,
     `Whatever it is${who}, you can say it here.`,
     `I'm listening${who}, however this goes.`,
   ];

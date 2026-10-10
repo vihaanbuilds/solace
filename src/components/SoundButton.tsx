@@ -18,7 +18,7 @@ export function SoundButton({ onClick }: SoundButtonProps) {
     <button
       className={`sound-button glass ${playing ? 'sound-button-playing' : ''}`}
       onClick={onClick}
-      aria-label={playing ? 'Ambient sounds playing — open sound picker' : 'Open ambient sound picker'}
+      aria-label={playing ? 'Ambient sounds playing, open sound picker' : 'Open ambient sound picker'}
       title="Ambient sounds"
     >
       <WaveIcon />

@@ -1,4 +1,4 @@
-// Server-side rate limiting for /api/cloud-chat — the real backstop behind
+// Server-side rate limiting for /api/cloud-chat, the real backstop behind
 // the client's own friendly per-browser daily nudge (src/lib/ai/messageLimits.ts),
 // which is easily bypassed by clearing storage or calling this endpoint
 // directly. This is IP-based since the app has no user accounts, backed by
@@ -17,13 +17,13 @@
 // punishing a whole shared network for one heavy day of normal use.
 //
 // If Upstash isn't configured (env vars unset) or is unreachable, this
-// fails OPEN — a rate limiter outage shouldn't take the whole chat feature
+// fails OPEN, a rate limiter outage shouldn't take the whole chat feature
 // down, since this is a cost-protection measure, not a security boundary.
 
 const BURST_WINDOW_SECONDS = 60;
 const BURST_LIMIT = 15;
 
-// Per IP per day — roughly 10x the per-browser daily caps in
+// Per IP per day, roughly 10x the per-browser daily caps in
 // messageLimits.ts, so a busy shared network isn't mistaken for abuse.
 // Same relative ordering: heaviest on the longest/deepest/image-carrying
 // tiers, lightest on the cheap fast one.
@@ -32,7 +32,7 @@ const DAILY_IP_LIMITS: Record<string, number> = {
   bud: 350,
   bloom: 150,
   canopy: 100,
-  // Not a chat tier — the ambient-sounds custom-blend endpoint. Deliberately
+  // Not a chat tier, the ambient-sounds custom-blend endpoint. Deliberately
   // the lowest limit: a nice-to-have creative tool, not core chat, so it
   // gets the least generous budget.
   'sound-blend': 100,
@@ -111,7 +111,7 @@ export async function checkRateLimit(ip: string, tier: string): Promise<RateLimi
 
     return { allowed: true, remaining: dailyLimit - dailyCount };
   } catch {
-    // Upstash unreachable or misbehaving — fail open rather than break chat.
+    // Upstash unreachable or misbehaving, fail open rather than break chat.
     return { allowed: true, remaining: Infinity };
   }
 }

@@ -7,7 +7,7 @@ const POINTS = [
   {
     icon: DeviceIcon,
     title: 'No account needed',
-    body: 'Open Solace and start talking — no email, no sign-up, nothing to create.',
+    body: 'Open Solace and start talking, no email, no sign-up, nothing to create.',
   },
   {
     icon: LockIcon,
@@ -17,7 +17,7 @@ const POINTS = [
   {
     icon: PersonIcon,
     title: 'Google sign-in is optional',
-    body: 'It only personalizes your greeting — your name and photo stay on your device, right alongside everything else.',
+    body: 'It only personalizes your greeting, your name and photo stay on your device, right alongside everything else.',
   },
 ];
 
@@ -26,7 +26,7 @@ export function Privacy() {
     <SubpageLayout
       kicker="Privacy"
       title="Privacy by design"
-      intro="You can use Solace completely anonymously — no account, no email, nothing to sign up for."
+      intro="You can use Solace completely anonymously, no account, no email, nothing to sign up for."
     >
       <section className="subpage-section">
         <div className="feature-grid feature-grid-compact">

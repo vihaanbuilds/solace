@@ -1,4 +1,4 @@
-// Pure state/orchestration for the ambient sound layers — no direct Web
+// Pure state/orchestration for the ambient sound layers, no direct Web
 // Audio API calls live here, only in soundSynth.ts, so this module can be
 // fully unit-tested by mocking that one import. Module-level singleton
 // state, same pattern as src/lib/ai/webllmEngine.ts.
@@ -9,7 +9,7 @@ export type LayerVolumes = SoundMix;
 type Listener = (volumes: LayerVolumes) => void;
 
 // Tapping a preset on for the first time starts it at this volume rather
-// than 0 — a toggle that turns something on silently would be confusing.
+// than 0, a toggle that turns something on silently would be confusing.
 const DEFAULT_PRESET_VOLUME = 0.6;
 
 function emptyVolumes(): LayerVolumes {
@@ -17,7 +17,7 @@ function emptyVolumes(): LayerVolumes {
 }
 
 const controllers: Partial<Record<SoundLayer, LayerController>> = {};
-// Starts empty rather than restoring from storage — browsers block audio
+// Starts empty rather than restoring from storage, browsers block audio
 // autoplay without a user gesture, so there is no safe way to "resume" a
 // saved mix at module load. See loadSoundMix() usage in SoundsOverlay.tsx
 // (Task 8) for how a saved mix gets offered as a one-tap resume instead.

@@ -1,6 +1,6 @@
 export const MAX_IMAGES = 3;
 
-// Sanity cap on the raw file before we even try to decode it — this isn't
+// Sanity cap on the raw file before we even try to decode it, this isn't
 // what bounds the final payload size, just a cheap fast-fail for something
 // absurd (e.g. an accidentally-selected video file or RAW photo).
 const MAX_INPUT_BYTES = 25 * 1024 * 1024;
@@ -8,7 +8,7 @@ const MAX_DIMENSION = 1600;
 const JPEG_QUALITY = 0.8;
 
 // Resizes and recompresses in the browser before anything is uploaded, so a
-// huge phone photo can't blow up the request payload or hang the page —
+// huge phone photo can't blow up the request payload or hang the page , 
 // the output size is bounded by resolution + JPEG quality, not by however
 // large the original file was.
 export async function processImageFile(file: File): Promise<string> {
@@ -23,7 +23,7 @@ export async function processImageFile(file: File): Promise<string> {
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    throw new Error(`Couldn't read ${file.name} — try a different image.`);
+    throw new Error(`Couldn't read ${file.name}, try a different image.`);
   }
 
   const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));

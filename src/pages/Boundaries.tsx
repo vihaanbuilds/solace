@@ -8,7 +8,7 @@ const BOUNDARIES = [
   {
     icon: CloseIcon,
     title: "Won't diagnose you",
-    body: "Solace isn't a clinician and never plays one — it won't label what you're going through.",
+    body: "Solace isn't a clinician and never plays one, it won't label what you're going through.",
   },
   {
     icon: PersonIcon,
@@ -18,7 +18,7 @@ const BOUNDARIES = [
   {
     icon: ChatBubbleIcon,
     title: "Won't pretend to have answers",
-    body: "If Solace doesn't know, it says so — instead of improvising something that sounds convincing.",
+    body: "If Solace doesn't know, it says so, instead of improvising something that sounds convincing.",
   },
   {
     icon: AlertIcon,
@@ -32,7 +32,7 @@ export function Boundaries() {
     <SubpageLayout
       kicker="Boundaries"
       title="What Solace won't do"
-      intro="Solace is a supportive companion, not a replacement for a real person or a licensed mental health professional — and it's not trying to be."
+      intro="Solace is a supportive companion, not a replacement for a real person or a licensed mental health professional, and it's not trying to be."
     >
       <section className="subpage-section">
         <div className="feature-grid">

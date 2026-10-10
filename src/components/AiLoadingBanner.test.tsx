@@ -59,7 +59,7 @@ describe('AiLoadingBanner', () => {
         listeners.forEach((listener) => listener('loading', 0.2, ''));
       });
       expect(screen.getByText(/downloading to run fully on your device/i)).toBeInTheDocument();
-      expect(screen.getByText(/1–3 minutes/)).toBeInTheDocument();
+      expect(screen.getByText(/1-3 minutes/)).toBeInTheDocument();
       expect(screen.getByText(/regular cloud replies/i)).toBeInTheDocument();
     });
 

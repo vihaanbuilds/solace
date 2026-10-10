@@ -1,7 +1,7 @@
-// Vercel Edge Function — the only place the cloud AI provider's API key
+// Vercel Edge Function, the only place the cloud AI provider's API key
 // touches the network. It never reaches the browser: the client calls this
 // endpoint, this endpoint calls the provider, and the response streams back
-// through. Keep it that way — moving this call into client code would leak
+// through. Keep it that way, moving this call into client code would leak
 // the key to anyone who opens the Network tab on the live site.
 import { checkRateLimit, getClientIp } from './_lib/rateLimit';
 
@@ -15,7 +15,7 @@ const KNOWN_TIERS = new Set(['sprout', 'bud', 'bloom', 'canopy']);
 const DEFAULT_TIER = 'bud';
 
 // Canopy's cloud model, via Google's Gemini OpenAI-compatible endpoint.
-// Flash, not Pro — the free-tier key this runs on has zero quota for Pro
+// Flash, not Pro, the free-tier key this runs on has zero quota for Pro
 // models, only Flash. Every other tier is unaffected by this and always
 // uses the provider below.
 const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/openai';
@@ -28,12 +28,12 @@ interface CloudChatRequestBody {
 }
 
 // Images are sent as base64 data URLs inside message content, which can get
-// large fast — this is an explicit, controlled failure instead of leaving
+// large fast, this is an explicit, controlled failure instead of leaving
 // it to whatever the platform's own default limit happens to be.
 const MAX_BODY_BYTES = 8 * 1024 * 1024;
 // Some models (gemini-3, the direct Gemini path used by canopy) spend a
 // large, variable share of this budget on an invisible reasoning pass before
-// writing any visible reply — observed up to ~1000 reasoning tokens alone on
+// writing any visible reply, observed up to ~1000 reasoning tokens alone on
 // a real prompt. A ceiling too close to a tier's requested max_tokens risks
 // the reasoning pass consuming the whole budget and returning an empty
 // reply. Kept well above the highest per-tier request (see MAX_TOKENS in
@@ -47,18 +47,18 @@ interface Provider {
 }
 
 // sprout/bud/bloom all route through the same OPENAI_API_KEY/OPENAI_BASE_URL
-// endpoint — only the "model" field picked per tier changes which underlying
+// endpoint, only the "model" field picked per tier changes which underlying
 // model answers. sonar/gpt-5.5/opus-5/etc are gated behind a premium
 // invitation this key doesn't have yet, so tiers currently use standard-tier
 // models. Picked by testing each against the real system prompt + a real
-// message, not just latency on a trivial prompt — every "thinking"-style
+// message, not just latency on a trivial prompt, every "thinking"-style
 // model tried for bloom (nemotron, kimi-k2.6, gemini-3) eventually failed
 // under real conditions: nemotron and kimi-k2.6 went into runaway reasoning
-// chains that never finished, and gemini-3 — despite good replies most of
-// the time — hung past 5 minutes on one repeat of the exact same request
+// chains that never finished, and gemini-3, despite good replies most of
+// the time, hung past 5 minutes on one repeat of the exact same request
 // that had just answered in 8s. deepseek-v3.2 has no such invisible
 // reasoning pass, answered consistently in the same few seconds across
-// every trial, and reads just as warm and specific — reliability matters
+// every trial, and reads just as warm and specific, reliability matters
 // more than raw depth for a tier real people rely on mid-crisis.
 // Models verified working on this key (standard tier). The provider has
 // retired or locked models before: deepseek-v3.2 was removed and sonar now
@@ -168,7 +168,7 @@ export default async function handler(req: Request): Promise<Response> {
     });
   }
 
-  // The real, server-side backstop against deliberate abuse — the client's
+  // The real, server-side backstop against deliberate abuse, the client's
   // own daily nudge (messageLimits.ts) is easily bypassed by clearing
   // storage or hitting this endpoint directly, so this is what actually
   // bounds cost from a bad actor rather than a well-behaved browser.
@@ -179,7 +179,7 @@ export default async function handler(req: Request): Promise<Response> {
       JSON.stringify({
         error:
           rateLimit.reason === 'burst'
-            ? 'Too many requests — please slow down and try again in a minute.'
+            ? 'Too many requests, please slow down and try again in a minute.'
             : 'Daily request limit reached for this network. It resets tomorrow.',
       }),
       {

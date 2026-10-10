@@ -21,8 +21,8 @@ function stripPunctuation(word: string): string {
 // Expands contractions like "don't" / "can't" to "do not" / "can not" so the
 // negation-word lookup (which matches on the literal token "not") catches
 // contracted negations too. This is only ever applied to the slice of text
-// BEFORE a matched phrase (see wordsBefore below) — never to the phrase-matching
-// text itself — so multi-word lexicon phrases that themselves contain "n't"
+// BEFORE a matched phrase (see wordsBefore below), never to the phrase-matching
+// text itself, so multi-word lexicon phrases that themselves contain "n't"
 // (e.g. "can't stand", "can't handle", "can't stop thinking", "shouldn't have")
 // are matched against the untouched original text and are unaffected.
 function expandContractionsForNegation(text: string): string {

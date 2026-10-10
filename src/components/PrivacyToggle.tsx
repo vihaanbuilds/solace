@@ -95,7 +95,7 @@ export function PrivacyToggle({ unlocked, onUnlock, onLock, onResetPrivateChats 
         onUnlock();
         closeModal();
       } else {
-        setError('Incorrect passcode — try again.');
+        setError('Incorrect passcode, try again.');
         setDigits(Array(CODE_LENGTH).fill(''));
         boxRefs.current[0]?.focus();
       }

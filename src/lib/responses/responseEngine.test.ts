@@ -70,7 +70,7 @@ describe('getResponse (fallback path, cloud AI unavailable)', () => {
   });
 });
 
-describe('getResponse (cloud AI available — default tier)', () => {
+describe('getResponse (cloud AI available, default tier)', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     localStorage.clear();

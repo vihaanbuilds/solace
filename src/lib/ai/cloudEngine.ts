@@ -1,20 +1,21 @@
+import { stripDashes } from '../text/noDashes';
 import type { ChatMessage } from './webllmEngine';
 import type { ChatTier } from '../storage';
 
 const CLOUD_ENDPOINT = '/api/cloud-chat';
 
-// Generous backstops, not a tool for forcing brevity — pacing comes from the
+// Generous backstops, not a tool for forcing brevity, pacing comes from the
 // system prompt (see systemPrompt.ts). These just cap runaway generation,
 // set high enough above each tier's expected reply length that a truncated
 // mid-sentence cutoff should never actually happen in practice.
 //
 // bloom and canopy both run on models that spend an invisible reasoning pass
 // before writing any visible reply, and that pass alone was observed using
-// up to ~1000 tokens on a real prompt — well past their old 800 budget. When
+// up to ~1000 tokens on a real prompt, well past their old 800 budget. When
 // that happened, the reasoning pass consumed the entire budget and the
 // model returned an empty reply. 3000 leaves comfortable headroom (measured
 // real completions topped out under 1000 total) without changing reply
-// length in practice, since the system prompt — not this ceiling — is what
+// length in practice, since the system prompt, not this ceiling, is what
 // actually controls how long a reply reads.
 const MAX_TOKENS: Record<ChatTier, number> = {
   sprout: 300,
@@ -25,10 +26,10 @@ const MAX_TOKENS: Record<ChatTier, number> = {
 
 // The cloud model is search-tuned and keeps emitting citation markers like
 // [1][2] and markdown emphasis even when explicitly told not to in the
-// system prompt — that instruction helps but doesn't fully hold, so this
+// system prompt, that instruction helps but doesn't fully hold, so this
 // strips what gets through rather than trusting the model to comply.
 function cleanCloudText(text: string): string {
-  return text
+  return stripDashes(text)
     .replace(/(\[\d+\])+/g, '')
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/(?<!\*)\*(?!\*)(.*?)\*(?!\*)/g, '$1')
@@ -39,16 +40,16 @@ function cleanCloudText(text: string): string {
 
 // A bare one-word (or near-enough) message like "whatever", "idk", or
 // "fine" reliably gets misread as a request to define/translate the word
-// itself rather than as the user's actual reply — confirmed directly
+// itself rather than as the user's actual reply, confirmed directly
 // against the live API (e.g. "whatever" alone came back with an Italian
 // translation). The system prompt asks it not to do this, but that alone
 // doesn't fully hold for this specific shape of input, the same way the
-// citation-bracket instruction alone didn't fully hold — so this appends a
+// citation-bracket instruction alone didn't fully hold, so this appends a
 // short, invisible-to-the-user clarifying note to the outgoing text only
 // when the message is this short, rather than bloating the prompt (and
 // every reply) for something that only matters in this one input shape.
 const SHORT_MESSAGE_HINT =
-  '\n\n(That was their whole message — a short, real reaction, not a request to define, translate, or explain the word. Respond to how they might be feeling, not to the word itself.)';
+  '\n\n(That was their whole message, a short, real reaction, not a request to define, translate, or explain the word. Respond to how they might be feeling, not to the word itself.)';
 
 function isBareShortMessage(text: string): boolean {
   const trimmed = text.trim();
@@ -56,7 +57,7 @@ function isBareShortMessage(text: string): boolean {
   return trimmed.split(/\s+/).length === 1 || trimmed.length <= 6;
 }
 
-// Only the last (current) user message is annotated/can carry images —
+// Only the last (current) user message is annotated/can carry images , 
 // history stays exactly as it was actually said, matching what's shown in
 // the chat log.
 function toPayloadMessages(messages: ChatMessage[], images: string[]): unknown[] {
@@ -83,7 +84,7 @@ function toPayloadMessages(messages: ChatMessage[], images: string[]): unknown[]
   });
 }
 
-// The cloud model runs on a real server, unlike Bloom's local mode — this
+// The cloud model runs on a real server, unlike Bloom's local mode, this
 // call sends the conversation to /api/cloud-chat (and from there to the
 // provider), so it must only ever be used behind a clear, honest disclosure
 // to the user.
@@ -99,7 +100,7 @@ export async function generateCloudReply(
     body: JSON.stringify({
       messages: toPayloadMessages(messages, images),
       max_tokens: MAX_TOKENS[tier],
-      // Lets the server apply its own per-tier daily rate limit — the real
+      // Lets the server apply its own per-tier daily rate limit, the real
       // backstop behind this browser's own daily nudge (messageLimits.ts).
       tier,
     }),

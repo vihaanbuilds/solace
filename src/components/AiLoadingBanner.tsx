@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { subscribeToEngineStatus, getEngineStatus, getEngineStatusText, loadEngine, EngineStatus } from '../lib/ai/webllmEngine';
 import { loadAiTier, loadBloomLocalMode } from '../lib/storage';
 
-// Every tier works instantly by default (cloud-backed) — this only has
+// Every tier works instantly by default (cloud-backed), this only has
 // anything to show when the user has opted into Bloom's local-mode toggle
 // (see ModelPicker), and even then it's just a status note: the chat keeps
 // working via Bloom's regular cloud replies the whole time it's loading.
@@ -18,7 +18,7 @@ export function AiLoadingBanner() {
         setStatus(nextStatus);
         setStatusText(nextText);
         // Tier/toggle can change from the model picker without this
-        // component remounting — cheap to re-read alongside status rather
+        // component remounting, cheap to re-read alongside status rather
         // than needing its own separate subscription for it.
         setTier(loadAiTier());
         setBloomLocal(loadBloomLocalMode());
@@ -56,7 +56,7 @@ export function AiLoadingBanner() {
   return (
     <div className="ai-loading-banner glass" role="status">
       <p>
-        Bloom is downloading to run fully on your device — this usually takes about 1–3 minutes.
+        Bloom is downloading to run fully on your device, this usually takes about 1-3 minutes.
         You'll get Bloom's regular cloud replies until it's ready.
       </p>
       {statusText && <p className="ai-loading-detail">{statusText}</p>}

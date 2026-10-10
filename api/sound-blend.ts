@@ -1,4 +1,4 @@
-// Vercel Edge Function — turns a short text description into a blend of
+// Vercel Edge Function, turns a short text description into a blend of
 // the four ambient sound layers (ocean/rain/birds/breeze), via the same
 // OPENAI_API_KEY/OPENAI_BASE_URL provider as api/cloud-chat.ts. Kept
 // independent of src/ (no cross-imports) to match that file's existing
@@ -20,9 +20,9 @@ interface SoundBlendRequestBody {
   description?: unknown;
 }
 
-const SYSTEM_PROMPT = `You turn a short description into a blend of exactly four ambient sound layers: ocean, rain, birds, breeze. These are the ONLY four sounds that exist in this system — you are not generating new sound types, just deciding how loud each of the four should be for the described scene or vibe.
+const SYSTEM_PROMPT = `You turn a short description into a blend of exactly four ambient sound layers: ocean, rain, birds, breeze. These are the ONLY four sounds that exist in this system, you are not generating new sound types, just deciding how loud each of the four should be for the described scene or vibe.
 
-The description might be literal ("a stormy ocean at night") or a mood/genre vibe ("chill lo-fi coffee shop", "upbeat morning energy") — interpret either kind and translate it into weights for the four layers.
+The description might be literal ("a stormy ocean at night") or a mood/genre vibe ("chill lo-fi coffee shop", "upbeat morning energy"), interpret either kind and translate it into weights for the four layers.
 
 Respond with ONLY a JSON object, no other text, in exactly this shape:
 {"ocean": 0.0, "rain": 0.0, "birds": 0.0, "breeze": 0.0}
@@ -106,7 +106,7 @@ export default async function handler(req: Request): Promise<Response> {
       JSON.stringify({
         error:
           rateLimit.reason === 'burst'
-            ? 'Too many requests — please slow down and try again in a minute.'
+            ? 'Too many requests, please slow down and try again in a minute.'
             : 'Daily request limit reached for this network. It resets tomorrow.',
       }),
       { status: 429, headers: { 'content-type': 'application/json', 'retry-after': '60' } }

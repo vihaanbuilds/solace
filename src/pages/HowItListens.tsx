@@ -8,7 +8,7 @@ const MODES = [
     icon: HeartIcon,
     name: 'Comforter',
     description: 'Validates and soothes when things feel like too much.',
-    example: '"That sounds like a lot to carry — you don\'t have to be okay right now."',
+    example: '"That sounds like a lot to carry, you don\'t have to be okay right now."',
   },
   {
     icon: SparkleIcon,
@@ -25,7 +25,7 @@ const MODES = [
 ];
 
 const ON_DEVICE = [
-  { icon: ChipIcon, title: 'Runs on your device', body: 'Llama 3.2 executes locally through WebGPU — no server ever sees your words.' },
+  { icon: ChipIcon, title: 'Runs on your device', body: 'Llama 3.2 executes locally through WebGPU, no server ever sees your words.' },
   { icon: ServerOffIcon, title: 'No round trip to a server', body: "There's nothing to intercept, log, or leak, because nothing leaves your browser." },
   { icon: WifiOffIcon, title: 'Works even offline', body: 'Once the model has loaded once, Solace keeps responding without a connection.' },
 ];
@@ -35,7 +35,7 @@ export function HowItListens() {
     <SubpageLayout
       kicker="How it works"
       title="How Solace listens"
-      intro="Every message is read for the feeling underneath it — sadness, grief, anger, anxiety, jealousy, loneliness, overwhelm, guilt, or joy — before Solace ever replies."
+      intro="Every message is read for the feeling underneath it, sadness, grief, anger, anxiety, jealousy, loneliness, overwhelm, guilt, or joy, before Solace ever replies."
     >
       <section className="subpage-section">
         <h2>Three ways to be met</h2>
@@ -56,7 +56,7 @@ export function HowItListens() {
         <h2>Built to run entirely on your device</h2>
         <p>
           Underneath, Solace is powered by an open, on-device language model (Llama 3.2)
-          running through WebGPU — right in your browser tab. It means your words never have
+          running through WebGPU, right in your browser tab. It means your words never have
           to leave your device to be understood.
         </p>
         <div className="feature-grid feature-grid-compact">

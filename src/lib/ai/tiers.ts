@@ -7,7 +7,7 @@ export interface TierInfo {
   description: string;
 }
 
-// Branded product names/versions, not the underlying model — all four tiers
+// Branded product names/versions, not the underlying model, all four tiers
 // are backed by the same cloud model by default (see cloudEngine.ts) and
 // differ only in how the system prompt paces and deepens the reply (see
 // systemPrompt.ts). Bloom is the one exception with an optional fully local
@@ -17,13 +17,13 @@ export const TIERS: Record<ChatTier, TierInfo> = {
     name: 'Sprout',
     version: 'v1.4.12',
     tagline: 'Fastest replies',
-    description: 'Quick, lighter-touch responses — great for a fast back-and-forth.',
+    description: 'Quick, lighter-touch responses, great for a fast back-and-forth.',
   },
   bud: {
     name: 'Bud',
     version: 'v2.1.6',
     tagline: 'Balanced & understanding',
-    description: 'Our standard experience — thoughtful pacing for most conversations.',
+    description: 'Our standard experience, thoughtful pacing for most conversations.',
   },
   bloom: {
     name: 'Bloom',

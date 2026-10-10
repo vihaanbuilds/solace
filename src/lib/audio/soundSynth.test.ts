@@ -18,7 +18,7 @@ describe('soundSynth', () => {
 
   it('reports audio as unsupported when AudioContext is absent from the global', () => {
     const original = globalThis.AudioContext;
-    // @ts-expect-error — intentionally deleting for this one test
+    // @ts-expect-error, intentionally deleting for this one test
     delete globalThis.AudioContext;
     expect(isAudioSupported()).toBe(false);
     globalThis.AudioContext = original;

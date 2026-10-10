@@ -16,19 +16,19 @@ export function Story() {
         <div className="quote-block glass">
           <QuoteIcon className="quote-block-icon" />
           <p>
-            Solace grew up in a household that has always taken feelings seriously — where
+            Solace grew up in a household that has always taken feelings seriously, where
             checking in on each other isn't an afterthought, it's just how things are done.
             That's the bar it's held to: something you'd trust to actually listen on a hard
             night, the way the people who raised its creator taught him to.
           </p>
-          <p className="quote-block-attribution">— Vihaan Tanikonda, creator of Solace</p>
+          <p className="quote-block-attribution">,  Vihaan Tanikonda, creator of Solace</p>
         </div>
       </section>
 
       <section className="subpage-section">
         <h2>Still growing</h2>
         <p>
-          It's still growing, but it's ready to be that for you today — built quietly, tested
+          It's still growing, but it's ready to be that for you today, built quietly, tested
           honestly, and shipped because it was ready, not because it was finished being
           improved.
         </p>

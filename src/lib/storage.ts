@@ -195,7 +195,7 @@ export function loadAiTier(): ChatTier | null {
   return raw === 'sprout' || raw === 'bud' || raw === 'bloom' || raw === 'canopy' ? raw : null;
 }
 
-// Flipping this toggle on IS the consent to download — the warning lives
+// Flipping this toggle on IS the consent to download, the warning lives
 // right next to the toggle in the UI, so there's no separate opt-in step
 // to track the way the old mandatory-download gate needed one.
 export function saveBloomLocalMode(enabled: boolean): void {
@@ -228,11 +228,11 @@ export function loadSoundDescription(): string {
   return localStorage.getItem(SOUND_DESCRIPTION_KEY) ?? '';
 }
 
-// Full local reset for the "delete account" settings action — sweeps every
+// Full local reset for the "delete account" settings action, sweeps every
 // key this app has ever written rather than naming each one, so it can't
 // silently miss a newly added piece of state.
 export function clearAllLocalData(): void {
-  // Collect keys before removing any — Storage.key(i) is index-based and
+  // Collect keys before removing any, Storage.key(i) is index-based and
   // live, so deleting mid-iteration would skip entries as indices shift.
   const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i += 1) {

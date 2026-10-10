@@ -40,7 +40,7 @@ export function ModelPicker({ onTierChange }: ModelPickerProps = {}) {
 
   useEffect(() => subscribeToEngineStatus((next) => setStatus(next)), []);
 
-  // Refreshed on open rather than kept continuously live — usage only
+  // Refreshed on open rather than kept continuously live, usage only
   // changes when a message is actually sent elsewhere in the app, so
   // there's nothing to stay subscribed to between one open and the next.
   useEffect(() => {
@@ -49,7 +49,7 @@ export function ModelPicker({ onTierChange }: ModelPickerProps = {}) {
 
   // Resumes Bloom's local engine on mount if the user had left it on. Only
   // depends on the tier/toggle the user explicitly set, never on `status`
-  // itself — that's deliberate, since a reactive dependency on status was
+  // itself, that's deliberate, since a reactive dependency on status was
   // exactly what previously caused a cancelled load to silently restart
   // itself the moment it settled back to idle.
   useEffect(() => {
@@ -156,7 +156,7 @@ export function ModelPicker({ onTierChange }: ModelPickerProps = {}) {
                   <span className="model-picker-item-tagline">{TIERS[tier].tagline}</span>
                   <span className="model-picker-item-remaining">
                     {tier === 'bloom' && bloomLocal
-                      ? "Unlimited — local mode doesn't use this"
+                      ? "Unlimited, local mode doesn't use this"
                       : `${remaining[tier]} of ${getDailyLimit(tier)} left today`}
                   </span>
                 </button>
@@ -174,14 +174,14 @@ export function ModelPicker({ onTierChange }: ModelPickerProps = {}) {
                         </label>
                         <p className="model-picker-toggle-warning">
                           Downloads about {LOCAL_MODEL_APPROX_SIZE_GB}GB and needs a genuinely
-                          powerful phone or computer — it may not work on every device
+                          powerful phone or computer, it may not work on every device
                           {deviceSeemsUnderpowered() ? ', and this device might struggle with it' : ''}.
                           Nothing you type leaves your device in this mode, and it works offline
                           afterward.
                         </p>
                         {bloomLocal && status === 'loading' && (
                           <p className="model-picker-toggle-status">
-                            Loading… this can take 1–3 minutes.
+                            Loading… this can take 1-3 minutes.
                           </p>
                         )}
                         {bloomLocal && status === 'error' && (
@@ -195,7 +195,7 @@ export function ModelPicker({ onTierChange }: ModelPickerProps = {}) {
                       </>
                     ) : (
                       <p className="model-picker-toggle-warning">
-                        Local mode isn't supported in this browser — Bloom uses the cloud model
+                        Local mode isn't supported in this browser, Bloom uses the cloud model
                         here instead.
                       </p>
                     )}

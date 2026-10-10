@@ -44,7 +44,7 @@ export function ProfileSetupModal({ onComplete }: ProfileSetupModalProps) {
       >
         <h2 className="privacy-modal-title">Before we get started</h2>
         <p className="privacy-modal-body">
-          Tell Solace a bit about you so it can tailor how it responds — this stays on your
+          Tell Solace a bit about you so it can tailor how it responds, this stays on your
           device, just like everything else here.
         </p>
 

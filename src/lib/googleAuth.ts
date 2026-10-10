@@ -1,5 +1,5 @@
 // Thin wrapper around Google Identity Services (GIS) for a lightweight
-// "sign in with Google" that personalizes the greeting — Solace still has
+// "sign in with Google" that personalizes the greeting, Solace still has
 // no backend and no accounts system, so this never gates functionality or
 // syncs data anywhere; it only decodes the ID token client-side to read a
 // name/email/picture and stores that locally, same as everything else here.
@@ -62,7 +62,7 @@ export async function renderGoogleSignInButton(
   await loadGisScript();
 
   // Guard against React StrictMode's dev-only double-invoke (or any other
-  // re-render) calling initialize() more than once for the same client —
+  // re-render) calling initialize() more than once for the same client , 
   // GIS logs a warning and only keeps the last call anyway, so skipping
   // repeats is strictly safer, not just quieter.
   if (initializedClientId !== clientId) {

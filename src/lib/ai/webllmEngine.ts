@@ -1,10 +1,10 @@
 import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
 
-// Bloom is the only tier that can still run fully on-device — Sprout, Bud,
+// Bloom is the only tier that can still run fully on-device, Sprout, Bud,
 // and the default Bloom/Canopy experience are all cloud-backed (see
 // cloudEngine.ts) now that a big upfront download isn't required to use the
 // app at all. The real model stays an implementation detail (still
-// disclosed honestly on the how-it-works page) — branded as "Bloom" in the
+// disclosed honestly on the how-it-works page), branded as "Bloom" in the
 // UI, never named directly.
 //
 // The model is sized to the device: phones and low-memory machines get the 1B
@@ -28,9 +28,9 @@ type StatusListener = (status: EngineStatus, progress: number, statusText: strin
 
 const STALL_TIMEOUT_MS = 60000;
 const STALL_MESSAGE =
-  "This stalled without finishing — your device may not be powerful enough to run this locally. Turn local mode off to use the regular (cloud) Bloom instead.";
+  "This stalled without finishing, your device may not be powerful enough to run this locally. Turn local mode off to use the regular (cloud) Bloom instead.";
 const FAILURE_MESSAGE =
-  "That didn't finish loading — your device may not be powerful enough to run this locally. Turn local mode off to use the regular (cloud) Bloom instead.";
+  "That didn't finish loading, your device may not be powerful enough to run this locally. Turn local mode off to use the regular (cloud) Bloom instead.";
 
 let engine: MLCEngine | null = null;
 let status: EngineStatus = 'idle';
@@ -105,7 +105,7 @@ function isLikelyMobile(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 }
 
-// Soft hint only, not a hard gate — navigator.deviceMemory isn't available
+// Soft hint only, not a hard gate, navigator.deviceMemory isn't available
 // on Safari/iOS at all. Used to show an extra warning line next to Bloom's
 // local-mode toggle rather than to block it outright; the user can always
 // try it and turn it back off if it doesn't work well.
@@ -159,7 +159,7 @@ export function loadEngine(): void {
 }
 
 // Invalidates any in-flight load (its promise chain checks loadGeneration
-// and no-ops itself once stale) and drops back to idle — used whenever the
+// and no-ops itself once stale) and drops back to idle, used whenever the
 // user turns Bloom's local-mode toggle off, so a stuck or abandoned attempt
 // can't keep the UI stranded in "loading" forever.
 export function cancelLoad(): void {
